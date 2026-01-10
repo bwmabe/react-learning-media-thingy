@@ -1,11 +1,11 @@
-import express, { Request, Response } from 'express';
-import sqlite3 from 'sqlite3';
-import cors from 'cors';
+import express, { Request, Response } from "express"
+import sqlite3 from "sqlite3"
+import cors from "cors"
 
-const app = express();
-app.use(cors());
+const app = express()
+app.use(cors())
 
-const db = new sqlite3.Database('./metadata.db');
+const db = new sqlite3.Database("./metadata.db")
 
 interface FileMetadata {
   id: string;
@@ -16,16 +16,16 @@ interface FileMetadata {
   filename: string;
 }
 
-app.get('/api/files', (req: Request, res: Response) => {
-  const query = "SELECT * FROM items";
+app.get("/api/files", (req: Request, res: Response) => {
+  const query = "SELECT * FROM items"
   
   db.all(query, [], (err: Error | null, rows: FileMetadata[]) => {
     if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+      res.status(500).json({ error: err.message })
+      return
     }
-    res.json(rows);
-  });
-});
+    res.json(rows)
+  })
+})
 
-app.listen(5000, () => console.log('Backend running on port 5000'));
+app.listen(5000, () => console.log("Backend running on port 5000"))
