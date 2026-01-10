@@ -5,7 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "ingest": "ts-node src/index.ts"
+    "ingest": "ts-node src/index.ts",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +22,7 @@
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
-    "@types/sqlite3": "^3.1.11"
+    "@types/sqlite3": "^3.1.11",
+    "eslint": "^8.57.0"
   }
 }
