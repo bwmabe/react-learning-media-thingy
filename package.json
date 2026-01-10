@@ -3,11 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend && npm install --prefix ingester",
     "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\"",
     "build": "npm run build --prefix frontend && npm run build --prefix backend",
-    "start": "node backend/dist/server.js"
+    "start": "node backend/dist/server.js",
+    "ingest": "npm run ingest --prefix ingester --"
   },
+  "workspaces": [
+    "frontend",
+    "backend",
+    "ingester"
+  ],
   "devDependencies": {
     "concurrently": "^8.2.0"
   }
