@@ -1,7 +1,7 @@
-import { useQuery } from "@apollo/client/react"
 import { gql } from "@apollo/client"
+import { useQuery } from "@apollo/client/react"
 
-import { File } from "./File"
+import { File, GetFilesResult } from "./Interfaces"
 
 const GET_FILES = gql`
   query GetFiles($filter: String) {
@@ -15,7 +15,7 @@ const GET_FILES = gql`
 `
 
 export const App: React.FC = () => {
-  const { loading, data } = useQuery(GET_FILES)
+  const { loading, data } = useQuery<GetFilesResult>(GET_FILES)
 
   if (loading) return <p>Loading...</p>
 
