@@ -3,7 +3,7 @@ import { startStandaloneServer } from "@apollo/server/standalone"
 import sqlite3 from "sqlite3"
 import { typeDefs } from "./schema"
 
-const db = new sqlite3.Database("./metadata.db")
+const db = new sqlite3.Database(process.env.DATABASE_NAME || "./metadata.db")
 
 const resolvers = {
   Query: {
@@ -25,5 +25,7 @@ const resolvers = {
 
 const server = new ApolloServer({ typeDefs, resolvers })
 
-startStandaloneServer(server, { listen: { port: 4000 } })
+startStandaloneServer(server, {
+  listen: { port: (process.env.PORT && parseInt(process.env.PORT, 10)) || 4000 },
+})
   .then(({ url }) => console.log(`🚀 Server ready at ${url}`))
