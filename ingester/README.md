@@ -4,14 +4,10 @@ This component is responsible for ingesting metadata from JSON files into a SQLi
 
 ## Setup
 
-1.  Navigate to the `ingester` directory:
-    ```sh
-    cd ingester
-    ```
-2.  Install the dependencies:
-    ```sh
-    npm install
-    ```
+Install the dependencies:
+```sh
+npm install
+```
 
 ## Building
 

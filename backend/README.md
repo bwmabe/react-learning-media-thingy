@@ -4,33 +4,21 @@ This component is a GraphQL server built with Apollo Server. It provides an API 
 
 ## Setup
 
-1.  Navigate to the `backend` directory:
-    ```sh
-    cd backend
-    ```
-2.  Install the dependencies:
-    ```sh
-    npm install
-    ```
+Install the dependencies:
+```sh
+npm install
+```
 
 ## Configuration
 
 The server is configured via environment variables:
 
--   `PORT`: The port for the server to listen on. Defaults to `4000`.
--   `DATABASE_NAME`: The path to the SQLite database file. Defaults to `./metadata.db`.
-
-You can set these in your shell before running the server.
-
-**Example:**
-```sh
-export PORT=8080
-export DATABASE_NAME=../ingester/test.db
-```
+|    Variable     |  Default Value  |
+| --------------- | --------------- |
+| `PORT`          |          `4000` |
+| `DATABASE_NAME` | `./metadata.db` | 
 
 ## Building
-
-To compile the TypeScript code, run:
 
 ```sh
 npm run build
