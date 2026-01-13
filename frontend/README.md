@@ -4,14 +4,10 @@ This is a React application that displays media metadata fetched from the backen
 
 ## Setup
 
-1.  Navigate to the `frontend` directory:
-    ```sh
-    cd frontend
-    ```
-2.  Install the dependencies:
-    ```sh
-    npm install
-    ```
+Install the dependencies:
+```sh
+npm install
+```
 
 ## Scripts
 
@@ -23,7 +19,23 @@ To start the local development server, run:
 npm start
 ```
 
-This will open the application in your browser, typically at `http://localhost:3000`. The page will automatically reload as you make edits.
+This will open the application in your browser. By default, it runs on port `3000`.
+
+To run the server on a different port, you can use the `PORT` environment variable.
+
+**Example using command line:**
+```sh
+PORT=3001 npm start
+```
+
+Alternatively, you can add the `PORT` variable to a `.env` file in the `frontend` directory.
+
+**Example `.env` file:**
+```
+PORT=3001
+```
+
+The application will automatically reload if you make changes to the code.
 
 ### Building for Production
 
@@ -45,20 +57,15 @@ npm test
 
 ## Connecting to the Backend
 
-This application expects the backend GraphQL server to be running and available.
+This application connects to the backend GraphQL server to fetch data. The endpoint for this server can be configured using an environment variable.
 
-**IMPORTANT:** The GraphQL endpoint is currently hardcoded to `http://localhost:4000/` in `src/index.tsx`.
+By default, it will attempt to connect to `http://localhost:4000`.
 
-If your backend is running on a different address, you must update the `uri` in `frontend/src/index.tsx`:
+To configure a different endpoint, create a file named `.env` in the `frontend` directory. Add the `REACT_APP_GRAPHQL_URI` variable to this file, pointing to your backend's URL.
 
-```typescript
-// in src/index.tsx
-const client = new ApolloClient({
-  link: new HttpLink({
-    uri: "http://your-graphql-endpoint/", // <-- Change this line
-  }),
-  cache: new InMemoryCache(),
-});
+**Example `.env` file:**
+```
+REACT_APP_GRAPHQL_URI=http://localhost:8080
 ```
 
-For a more flexible setup, consider using environment variables (e.g., `REACT_APP_GRAPHQL_URI`) to configure this endpoint.
+The backend server runs on port `4000` by default, but its port can be changed via the `PORT` environment variable, as described in the [backend's README](../backend/README.md). Make sure the URI you provide here matches the address of your running backend instance.
