@@ -1,6 +1,8 @@
 export interface File {
-  id: string;
-  title: string;
+  id: string
+  title: string
+  user: string
+  filename: string
 }
 
 export interface GetFilesResult {
