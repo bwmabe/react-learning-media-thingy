@@ -1,15 +1,15 @@
-import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
-import express from 'express';
-import http from 'http';
-import cors from 'cors';
-import path from 'path';
-import sqlite3 from "sqlite3";
-import { typeDefs } from "./schema";
+import { ApolloServer } from "@apollo/server"
+import { expressMiddleware } from "@apollo/server/express4"
+import express from "express"
+import http from "http"
+import cors from "cors"
+import path from "path"
+import sqlite3 from "sqlite3"
+import { typeDefs } from "./schema"
 
 async function start() {
-  const app = express();
-  const httpServer = http.createServer(app);
+  const app = express()
+  const httpServer = http.createServer(app)
   
   const db = new sqlite3.Database(process.env.DATABASE_NAME || "./metadata.db")
   
@@ -34,26 +34,26 @@ async function start() {
   const server = new ApolloServer({
       typeDefs,
       resolvers,
-  });
+  })
 
-  await server.start();
+  await server.start()
   
-  const mediaPath = path.resolve(__dirname, '../../test-media');
-  app.use('/static', express.static(mediaPath));
+  const mediaPath = path.resolve(__dirname, "../../test-media")
+  app.use("/static", express.static(mediaPath))
   
   app.use(
-      '/graphql',
+      "/graphql",
       cors<cors.CorsRequest>(),
       express.json(),
       expressMiddleware(server),
-  );
+  )
 
-  const port = (process.env.PORT && parseInt(process.env.PORT, 10)) || 4000;
+  const port = (process.env.PORT && parseInt(process.env.PORT, 10)) || 4000
 
-  await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));
+  await new Promise<void>((resolve) => httpServer.listen({ port }, resolve))
 
-  console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
-  console.log(`🎬 Media served from http://localhost:${port}/static/`);
+  console.log(`🚀 Server ready at http://localhost:${port}/graphql`)
+  console.log(`🎬 Media served from http://localhost:${port}/static/`)
 }
 
-start();
+start()
