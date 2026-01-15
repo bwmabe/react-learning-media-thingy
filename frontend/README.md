@@ -59,7 +59,7 @@ npm test
 
 This application connects to the backend GraphQL server to fetch data. The endpoint for this server can be configured using an environment variable.
 
-By default, it will attempt to connect to `http://localhost:4000`.
+By default, it will attempt to connect to `http://localhost:4000/graphql`.
 
 To configure a different endpoint, create a file named `.env` in the `frontend` directory. Add the `REACT_APP_GRAPHQL_URI` variable to this file, pointing to your backend's URL.
 
