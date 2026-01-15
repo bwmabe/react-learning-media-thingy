@@ -21,8 +21,8 @@ describe("Ingester Script", () => {
   beforeEach(async () => {
     try {
       await fs.unlink(dbPath)
-    } catch (error: any) {
-      if (error.code !== "ENOENT") { // Ignore "file not found" error
+    } catch (error) {
+      if ((error as { code: string }).code !== "ENOENT") { // Ignore "file not found" error
         throw error
       }
     }
@@ -30,7 +30,7 @@ describe("Ingester Script", () => {
 
   test("should ingest JSON files and store them in the database", async () => {
     // Run the ingester script
-    const { stdout, stderr } = await execPromise(`node ${ingesterScriptPath} ${testAssetsDir} ${dbPath}`)
+    const { stderr } = await execPromise(`node ${ingesterScriptPath} ${testAssetsDir} ${dbPath}`)
 
     // Check for errors
     expect(stderr).toBe("")
