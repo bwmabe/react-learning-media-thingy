@@ -8,7 +8,7 @@ import util from 'util';
 const execPromise = util.promisify(exec);
 
 describe('Ingester Script', () => {
-  const testAssetsDir = path.resolve(__dirname, 'test-assets');
+  const testAssetsDir = path.resolve(__dirname, '../../test-media');
   const dbPath = path.resolve(__dirname, 'test.db');
   const ingesterScriptPath = path.resolve(__dirname, '../dist/index.js');
 
