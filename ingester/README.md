@@ -33,14 +33,14 @@ npm run ingest <directory_to_search> <path_to_db>
 **Example:**
 
 ```sh
-npm run ingest ./test/test-assets ./test.db
+npm run ingest ../test-data/media ./test.db
 ```
 
 Alternatively, you can first build the project and then run the compiled JavaScript file directly:
 
 ```sh
 npm run build
-node dist/index.js ./test/test-assets ./test.db
+node dist/index.js ../test-data/media ./test.db
 ```
 
 ## Testing
