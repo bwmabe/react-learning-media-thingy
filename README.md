@@ -42,6 +42,9 @@ For example, to search for files in a directory named `my_media` and use a datab
 npm --prefix ingester/ run ingest -- my_media media.db
 ```
 
-## Other stuff
+## Third-Party Content
 
-uhhhh
+The Big Buck Bunny video clips used for testing purposes in the `test-media` directory are from the Blender Foundation.
+© copyright 2008, Blender Foundation / www.bigbuckbunny.org.
+These clips are licensed under the [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/) license.
+

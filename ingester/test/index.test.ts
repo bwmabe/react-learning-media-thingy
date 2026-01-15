@@ -43,34 +43,65 @@ describe("Ingester Script", () => {
 
     const items = await db.all("SELECT * FROM items ORDER BY id")
     
-    // There are 3 json files in test-assets
-    expect(items).toHaveLength(3)
+    expect(items).toHaveLength(7)
 
     expect(items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-            id: "12345",
-            user: "testuser",
-            service: "youtube",
-            title: "A Great Video",
-            substring: "A great video about something interesting.",
-            filename: "sample1"
+            id: "img_8675",
+            user: "photo_user",
+            service: "local",
+            title: "Bunnies and Rabbits",
+            substring: "A picture of a bunny.",
+            filename: path.join("images", "8675-bunnysrabbits.jpg")
         }),
         expect.objectContaining({
-            id: "67890",
-            user: "",
-            service: "",
-            title: "Another Great Video",
-            substring: "",
-            filename: "sample2"
+            id: "img_8090",
+            user: "photo_user",
+            service: "local",
+            title: "Bunnies and Rabbits",
+            substring: "Another picture of a bunny.",
+            filename: path.join("images", "8090-bunnysrabbits.jpg")
         }),
         expect.objectContaining({
-            id: "abcde",
-            user: "anotheruser",
-            service: "vimeo",
-            title: "A short film",
-            substring: "A short film about a robot.",
-            filename: path.join("docs", "sample3")
+            id: "img_373691_s",
+            user: "photo_user",
+            service: "local",
+            title: "White Rabbit in sub-directory",
+            substring: "A white rabbit in a green field, but in a sub-directory.",
+            filename: path.join("images", "rabbit-373691_1280.jpg")
+        }),
+        expect.objectContaining({
+            id: "vid_1080p",
+            user: "video_user",
+            service: "local",
+            title: "Big Buck Bunny 1080p",
+            substring: "A trimmed clip of Big Buck Bunny in 1080p.",
+            filename: "trimmed_big_buck_bunny_1080p_h264.mov"
+        }),
+        expect.objectContaining({
+            id: "vid_640x360",
+            user: "video_user",
+            service: "local",
+            title: "Big Buck Bunny 640x360",
+            substring: "A trimmed clip of Big Buck Bunny in 640x360.",
+            filename: path.join("videos", "trimmed_BigBuckBunny_640x360.m4v")
+        }),
+        expect.objectContaining({
+            id: "vid_320x180",
+            user: "video_user",
+            service: "local",
+            title: "Big Buck Bunny 320x180",
+            substring: "A trimmed clip of Big Buck Bunny in 320x180.",
+            filename: path.join("videos", "trimmed_BigBuckBunny_320x180.mp4")
+        }),
+        expect.objectContaining({
+            id: "img_373691",
+            user: "photo_user",
+            service: "local",
+            title: "White Rabbit",
+            substring: "A white rabbit in a green field.",
+            filename: "rabbit-373691_1280.jpg"
         })
       ])
     )
