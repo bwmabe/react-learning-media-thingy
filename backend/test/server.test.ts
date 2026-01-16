@@ -1,45 +1,45 @@
 
-import { createServer } from '../src/server';
-import request from 'supertest';
-import path from 'path';
-import { Server } from 'http';
-import sqlite3 from 'sqlite3';
-import express from 'express';
+import { createServer } from "../src/server"
+import request from "supertest"
+import path from "path"
+import { Server } from "http"
+import sqlite3 from "sqlite3"
+import express from "express"
 
-let app: express.Express;
-let httpServer: Server;
-let db: sqlite3.Database;
+let app: express.Express
+let httpServer: Server
+let db: sqlite3.Database
 
-const testDbPath = path.resolve(__dirname, '../../test-data/test.db');
+const testDbPath = path.resolve(__dirname, "../../test-data/test.db")
 
 beforeAll(async () => {
-  const server = await createServer(testDbPath);
-  app = server.app;
-  httpServer = server.httpServer;
-  db = server.db;
-});
+  const server = await createServer(testDbPath)
+  app = server.app
+  httpServer = server.httpServer
+  db = server.db
+})
 
 afterAll((done) => {
   db.close((err) => {
     if (err) {
-      console.error(err.message);
+      console.error(err.message)
     }
     httpServer.close(() => {
-        done();
-    });
-  });
-});
+        done()
+    })
+  })
+})
 
-describe('GraphQL API', () => {
-  it('should return all files', async () => {
+describe("GraphQL API", () => {
+  it("should return all files", async () => {
     const response = await request(app)
-      .post('/graphql')
+      .post("/graphql")
       .send({
-        query: '{ files { id title filename } }',
-      });
+        query: "{ files { id title filename } }",
+      })
 
-    expect(response.status).toBe(200);
-    expect(response.body.data.files.length).toBe(7);
+    expect(response.status).toBe(200)
+    expect(response.body.data.files.length).toBe(7)
     expect(response.body.data.files).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -48,18 +48,18 @@ describe('GraphQL API', () => {
             filename: "images/8675-bunnysrabbits.jpg"
         })
       ])
-    );
-  });
+    )
+  })
 
-  it('should filter files by title', async () => {
+  it("should filter files by title", async () => {
     const response = await request(app)
-      .post('/graphql')
+      .post("/graphql")
       .send({
-        query: '{ files(filter: "Big Buck Bunny") { id title } }',
-      });
+        query: "{ files(filter: \"Big Buck Bunny\") { id title } }",
+      })
 
-    expect(response.status).toBe(200);
-    expect(response.body.data.files.length).toBe(3);
+    expect(response.status).toBe(200)
+    expect(response.body.data.files.length).toBe(3)
     expect(response.body.data.files).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -67,6 +67,6 @@ describe('GraphQL API', () => {
               title: "Big Buck Bunny 1080p"
           })
         ])
-      );
-  });
-});
+      )
+  })
+})
