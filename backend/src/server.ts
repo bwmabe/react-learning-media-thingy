@@ -7,7 +7,20 @@ import path from "path"
 import sqlite3 from "sqlite3"
 import { typeDefs } from "./schema"
 
-export async function createServer(dbPath?: string) {
+interface FileMetadata {
+  id: string
+  user: string
+  service: string
+  title: string
+  substring: string
+  filename: string
+}
+
+export async function createServer(dbPath?: string): Promise<{
+  app: express.Express
+  httpServer: http.Server
+  db: sqlite3.Database
+}> {
   const app = express()
   const httpServer = http.createServer(app)
   
@@ -15,14 +28,14 @@ export async function createServer(dbPath?: string) {
   
   const resolvers = {
     Query: {
-      files: async (_: any, { filter }: { filter?: string }) => {
+      files: async (_parent: unknown, { filter }: { filter?: string }): Promise<FileMetadata[]> => {
         return new Promise((resolve, reject) => {
           const query = filter 
             ? "SELECT * FROM items WHERE title LIKE ?" 
             : "SELECT * FROM items"
           const params = filter ? [`%${filter}%`] : []
   
-          db.all(query, params, (err, rows) => {
+          db.all(query, params, (err, rows: FileMetadata[]) => {
             if (err) {
               console.error(err)
               reject(err)
