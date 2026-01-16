@@ -73,8 +73,8 @@ async function start() {
 
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve))
 
-  console.log(`🚀 Server ready at http://localhost:${port}/graphql`)
-  console.log(`🎬 Media served from http://localhost:${port}/static/`)
+  console.log(`Server ready at http://localhost:${port}/graphql`)
+  console.log(`Media served from http://localhost:${port}/static/`)
 }
 
 if (require.main === module) {
