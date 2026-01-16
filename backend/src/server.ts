@@ -7,11 +7,11 @@ import path from "path"
 import sqlite3 from "sqlite3"
 import { typeDefs } from "./schema"
 
-async function start() {
+export async function createServer(dbPath?: string) {
   const app = express()
   const httpServer = http.createServer(app)
   
-  const db = new sqlite3.Database(process.env.DATABASE_NAME || "./metadata.db")
+  const db = new sqlite3.Database(dbPath || process.env.DATABASE_NAME || "./metadata.db")
   
   const resolvers = {
     Query: {
@@ -23,7 +23,10 @@ async function start() {
           const params = filter ? [`%${filter}%`] : []
   
           db.all(query, params, (err, rows) => {
-            if (err) reject(err)
+            if (err) {
+              console.error(err)
+              reject(err)
+            }
             resolve(rows)
           })
         })
@@ -38,7 +41,7 @@ async function start() {
 
   await server.start()
   
-  const mediaPath = path.resolve(__dirname, "../../test-media")
+  const mediaPath = path.resolve(__dirname, "../../test-data/media")
   app.use("/static", express.static(mediaPath))
   
   app.use(
@@ -48,6 +51,11 @@ async function start() {
       expressMiddleware(server),
   )
 
+  return { app, httpServer, db }
+}
+
+async function start() {
+  const { httpServer } = await createServer()
   const port = (process.env.PORT && parseInt(process.env.PORT, 10)) || 4000
 
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve))
@@ -56,4 +64,6 @@ async function start() {
   console.log(`🎬 Media served from http://localhost:${port}/static/`)
 }
 
-start()
+if (require.main === module) {
+    start()
+}
