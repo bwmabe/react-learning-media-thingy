@@ -1,6 +1,7 @@
 import { gql } from "@apollo/client"
 import { useQuery } from "@apollo/client/react"
 import { useState } from "react"
+import { VideoPlayer } from "./VideoPlayer" // Added import
 
 import { File, GetFilesResult } from "./Interfaces"
 
@@ -64,10 +65,17 @@ export const App: React.FC = () => {
               {isVideo(selectedFile.filename) ? (
                 <div style={{ marginTop: "20px" }}>
                   <h3>Video Player</h3>
-                  <video key={selectedFile.id} width="100%" controls autoPlay>
-                    <source src={getMediaUrl(selectedFile.filename)} type={`video/${selectedFile.filename.split(".").pop()}`} />
-                    Your browser does not support the video tag.
-                  </video>
+                  <VideoPlayer 
+                    key={selectedFile.id}
+                    src={getMediaUrl(selectedFile.filename)}
+                    fileType={`video/${selectedFile.filename.split(".").pop()}`}
+                    options={{
+                      autoplay: true,
+                      controls: true,
+                      responsive: true,
+                      fluid: true,
+                    }}
+                  />
                 </div>
               ) : (
                 <p style={{ marginTop: "20px", fontStyle: "italic" }}>Select a video file to play.</p>
