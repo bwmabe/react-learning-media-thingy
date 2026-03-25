@@ -48,20 +48,20 @@ export async function createServer(dbPath?: string): Promise<{
   }
   
   const server = new ApolloServer({
-      typeDefs,
-      resolvers,
+    typeDefs,
+    resolvers,
   })
 
   await server.start()
-  
+
   const mediaPath = path.resolve(__dirname, "../../test-data/media")
   app.use("/static", express.static(mediaPath))
-  
+
   app.use(
-      "/graphql",
-      cors<cors.CorsRequest>(),
-      express.json(),
-      expressMiddleware(server),
+    "/graphql",
+    cors<cors.CorsRequest>(),
+    express.json(),
+    expressMiddleware(server),
   )
 
   return { app, httpServer, db }
@@ -78,5 +78,5 @@ async function start() {
 }
 
 if (require.main === module) {
-    start()
+  start()
 }

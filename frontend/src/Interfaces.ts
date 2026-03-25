@@ -6,5 +6,5 @@ export interface File {
 }
 
 export interface GetFilesResult {
-    files: File[]
+  files: File[]
 }

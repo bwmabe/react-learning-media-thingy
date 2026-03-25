@@ -25,7 +25,7 @@ afterAll((done) => {
       console.error(err.message)
     }
     httpServer.close(() => {
-        done()
+      done()
     })
   })
 })
@@ -43,9 +43,9 @@ describe("GraphQL API", () => {
     expect(response.body.data.files).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-            id: "img_8675",
-            title: "Bunnies and Rabbits",
-            filename: "images/8675-bunnysrabbits.jpg"
+          id: "img_8675",
+          title: "Bunnies and Rabbits",
+          filename: "images/8675-bunnysrabbits.jpg"
         })
       ])
     )
@@ -61,12 +61,12 @@ describe("GraphQL API", () => {
     expect(response.status).toBe(200)
     expect(response.body.data.files.length).toBe(3)
     expect(response.body.data.files).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-              id: "vid_1080p",
-              title: "Big Buck Bunny 1080p"
-          })
-        ])
-      )
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "vid_1080p",
+          title: "Big Buck Bunny 1080p"
+        })
+      ])
+    )
   })
 })
