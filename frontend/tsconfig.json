@@ -1,7 +1,10 @@
 {
   "extends": "../tsconfig.json",
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "vite.config.ts"],
   "compilerOptions": {
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["vite/client"]
   }
 }

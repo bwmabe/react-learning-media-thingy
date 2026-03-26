@@ -7,7 +7,7 @@ import { App } from "./App"
 
 const client = new ApolloClient({
   link: new HttpLink({
-    uri: process.env.REACT_APP_GRAPHQL_URI || "http://localhost:4000/graphql",
+    uri: import.meta.env.VITE_GRAPHQL_URI || "http://localhost:4000/graphql",
   }),
   cache: new InMemoryCache(),
 })
