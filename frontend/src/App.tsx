@@ -18,7 +18,7 @@ const GET_FILES = gql`
 
 const isVideo = (filename: string) => {
   const ext = filename.split(".").pop()?.toLowerCase()
-  return ext ? ["mp4", "mov", "webm", "ogv"].includes(ext) : false
+  return ext ? ["mp4", "m4v", "mov", "webm", "ogv"].includes(ext) : false
 }
 
 const isImage = (filename: string) => {
@@ -149,7 +149,7 @@ export const App: React.FC = () => {
                     <video key={selectedFile.id} controls playsInline>
                       <source
                         src={getMediaUrl(selectedFile.filename)}
-                        type={`video/${selectedFile.filename.split(".").pop()}`}
+                        type={selectedFile.filename.endsWith(".mov") ? "video/quicktime" : "video/mp4"}
                       />
                     </video>
                   ) : isImage(selectedFile.filename) ? (
