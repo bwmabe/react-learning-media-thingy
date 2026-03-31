@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client"
 import { useQuery } from "@apollo/client/react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { File, GetFilesResult } from "./Interfaces"
 import "./App.css"
@@ -37,9 +37,16 @@ export const App: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
 
-  if (loading) return <div className="empty-state">Loading...</div>
+  const userCards = useMemo(() => {
+    const users = [...new Set(data?.files.map(f => f.user) ?? [])]
+    return users.map(user => {
+      const images = (data?.files ?? []).filter(f => f.user === user && isImage(f.filename))
+      const preview = images.length > 0 ? images[Math.floor(Math.random() * images.length)] : null
+      return { user, preview }
+    })
+  }, [data])
 
-  const users = [...new Set(data?.files.map(f => f.user) ?? [])]
+  if (loading) return <div className="empty-state">Loading...</div>
 
   const userFiles = (data?.files ?? []).filter(f => f.user === selectedUser)
 
@@ -64,28 +71,38 @@ export const App: React.FC = () => {
     setExpandedGalleries(new Set())
   }
 
+  const goHome = () => {
+    setSelectedUser(null)
+    setSelectedFile(null)
+    setExpandedGalleries(new Set())
+  }
+
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Media Thing</h1>
+        <h1
+          className={selectedUser ? "app-title clickable" : "app-title"}
+          onClick={selectedUser ? goHome : undefined}
+        >
+          Media Thing
+        </h1>
       </header>
-      <div className="app-body">
-        <nav className="sidebar">
-          <div className="sidebar-heading">Users</div>
-          <div className="sidebar-list">
-            {users.map(user => (
-              <div
-                key={user}
-                className={`sidebar-item${selectedUser === user ? " selected" : ""}`}
-                onClick={() => selectUser(user)}
-              >
-                {user}
+
+      {!selectedUser ? (
+        <div className="landing">
+          <div className="user-grid">
+            {userCards.map(({ user, preview }) => (
+              <div key={user} className="user-card" onClick={() => selectUser(user)}>
+                {preview && (
+                  <img className="user-card-img" src={getMediaUrl(preview.filename)} alt={user} />
+                )}
+                <div className="user-card-name">{user}</div>
               </div>
             ))}
           </div>
-        </nav>
-
-        {selectedUser && (
+        </div>
+      ) : (
+        <div className="app-body">
           <nav className="sidebar">
             <div className="sidebar-heading">Galleries</div>
             <div className="sidebar-list">
@@ -111,37 +128,35 @@ export const App: React.FC = () => {
               })}
             </div>
           </nav>
-        )}
 
-        <main className="main">
-          {selectedFile ? (
-            <>
-              <h2 className="media-title">{selectedFile.title}</h2>
-              <div className="media-player">
-                {isVideo(selectedFile.filename) ? (
-                  <video key={selectedFile.id} controls playsInline>
-                    <source
-                      src={getMediaUrl(selectedFile.filename)}
-                      type={`video/${selectedFile.filename.split(".").pop()}`}
-                    />
-                  </video>
-                ) : isImage(selectedFile.filename) ? (
-                  <img src={getMediaUrl(selectedFile.filename)} alt={selectedFile.title} />
-                ) : null}
-              </div>
-              <div className="media-meta">
-                <div className="media-meta-row"><strong>ID:</strong> {selectedFile.id}</div>
-                <div className="media-meta-row"><strong>User:</strong> {selectedFile.user || "N/A"}</div>
-                <div className="media-meta-row"><strong>File:</strong> {selectedFile.filename}</div>
-              </div>
-            </>
-          ) : (
-            <div className="empty-state">
-              {selectedUser ? "Select a file to view it" : "Select a user to browse galleries"}
-            </div>
-          )}
-        </main>
-      </div>
+          <main className="main">
+            {selectedFile ? (
+              <>
+                <h2 className="media-title">{selectedFile.title}</h2>
+                <div className="media-player">
+                  {isVideo(selectedFile.filename) ? (
+                    <video key={selectedFile.id} controls playsInline>
+                      <source
+                        src={getMediaUrl(selectedFile.filename)}
+                        type={`video/${selectedFile.filename.split(".").pop()}`}
+                      />
+                    </video>
+                  ) : isImage(selectedFile.filename) ? (
+                    <img src={getMediaUrl(selectedFile.filename)} alt={selectedFile.title} />
+                  ) : null}
+                </div>
+                <div className="media-meta">
+                  <div className="media-meta-row"><strong>ID:</strong> {selectedFile.id}</div>
+                  <div className="media-meta-row"><strong>User:</strong> {selectedFile.user || "N/A"}</div>
+                  <div className="media-meta-row"><strong>File:</strong> {selectedFile.filename}</div>
+                </div>
+              </>
+            ) : (
+              <div className="empty-state">Select a file to view it</div>
+            )}
+          </main>
+        </div>
+      )}
     </div>
   )
 }
