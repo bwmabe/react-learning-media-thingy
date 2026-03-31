@@ -106,6 +106,60 @@ body {
   color: var(--ctp-text);
 }
 
+/* Gallery tree */
+.gallery-header {
+  padding: 10px 16px;
+  cursor: pointer;
+  color: var(--ctp-subtext1);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.1s, color 0.1s;
+}
+
+.gallery-header:hover {
+  background: var(--ctp-surface0);
+  color: var(--ctp-text);
+}
+
+.gallery-toggle {
+  font-size: 0.6rem;
+  color: var(--ctp-overlay0);
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.gallery-toggle.expanded {
+  transform: rotate(90deg);
+}
+
+.gallery-file {
+  padding: 8px 16px 8px 36px;
+  cursor: pointer;
+  color: var(--ctp-subtext0);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-left: 3px solid transparent;
+  transition: background 0.1s, color 0.1s;
+}
+
+.gallery-file:hover {
+  background: var(--ctp-surface0);
+  color: var(--ctp-text);
+}
+
+.gallery-file.selected {
+  background: var(--ctp-surface0);
+  border-left-color: var(--ctp-mauve);
+  color: var(--ctp-text);
+}
+
 /* Main content */
 .main {
   flex: 1;

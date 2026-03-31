@@ -33,9 +33,36 @@ const getMediaUrl = (filename: string) => {
 
 export const App: React.FC = () => {
   const { loading, data } = useQuery<GetFilesResult>(GET_FILES)
+  const [selectedUser, setSelectedUser] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
 
   if (loading) return <div className="empty-state">Loading...</div>
+
+  const users = [...new Set(data?.files.map(f => f.user) ?? [])]
+
+  const userFiles = (data?.files ?? []).filter(f => f.user === selectedUser)
+
+  const galleries = userFiles.reduce<Record<string, File[]>>((acc, file) => {
+    if (!acc[file.title]) acc[file.title] = []
+    acc[file.title].push(file)
+    return acc
+  }, {})
+
+  const toggleGallery = (title: string) => {
+    setExpandedGalleries(prev => {
+      const next = new Set(prev)
+      if (next.has(title)) next.delete(title)
+      else next.add(title)
+      return next
+    })
+  }
+
+  const selectUser = (user: string) => {
+    setSelectedUser(user)
+    setSelectedFile(null)
+    setExpandedGalleries(new Set())
+  }
 
   return (
     <div className="app">
@@ -44,19 +71,48 @@ export const App: React.FC = () => {
       </header>
       <div className="app-body">
         <nav className="sidebar">
-          <div className="sidebar-heading">Files</div>
+          <div className="sidebar-heading">Users</div>
           <div className="sidebar-list">
-            {data?.files.map((file: File) => (
+            {users.map(user => (
               <div
-                key={file.id}
-                className={`sidebar-item${selectedFile?.id === file.id ? " selected" : ""}`}
-                onClick={() => setSelectedFile(file)}
+                key={user}
+                className={`sidebar-item${selectedUser === user ? " selected" : ""}`}
+                onClick={() => selectUser(user)}
               >
-                {file.title}
+                {user}
               </div>
             ))}
           </div>
         </nav>
+
+        {selectedUser && (
+          <nav className="sidebar">
+            <div className="sidebar-heading">Galleries</div>
+            <div className="sidebar-list">
+              {Object.entries(galleries).map(([title, files]) => {
+                const expanded = expandedGalleries.has(title)
+                return (
+                  <div key={title}>
+                    <div className="gallery-header" onClick={() => toggleGallery(title)}>
+                      <span className={`gallery-toggle${expanded ? " expanded" : ""}`}>▶</span>
+                      {title}
+                    </div>
+                    {expanded && files.map(file => (
+                      <div
+                        key={file.id}
+                        className={`gallery-file${selectedFile?.id === file.id ? " selected" : ""}`}
+                        onClick={() => setSelectedFile(file)}
+                      >
+                        {file.filename.split("/").pop()}
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+          </nav>
+        )}
+
         <main className="main">
           {selectedFile ? (
             <>
@@ -80,7 +136,9 @@ export const App: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="empty-state">Select a file to view it</div>
+            <div className="empty-state">
+              {selectedUser ? "Select a file to view it" : "Select a user to browse galleries"}
+            </div>
           )}
         </main>
       </div>
