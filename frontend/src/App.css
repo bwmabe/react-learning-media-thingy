@@ -188,6 +188,13 @@ body {
   color: var(--ctp-text);
 }
 
+.gallery-header.selected {
+  background: var(--ctp-surface0);
+  border-left: 3px solid var(--ctp-mauve);
+  padding-left: 13px;
+  color: var(--ctp-text);
+}
+
 .gallery-toggle {
   font-size: 0.6rem;
   color: var(--ctp-overlay0);

@@ -110,19 +110,30 @@ export const App: React.FC = () => {
                 const expanded = expandedGalleries.has(title)
                 return (
                   <div key={title}>
-                    <div className="gallery-header" onClick={() => toggleGallery(title)}>
-                      <span className={`gallery-toggle${expanded ? " expanded" : ""}`}>▶</span>
-                      {title}
-                    </div>
-                    {expanded && files.map(file => (
+                    {files.length === 1 ? (
                       <div
-                        key={file.id}
-                        className={`gallery-file${selectedFile?.id === file.id ? " selected" : ""}`}
-                        onClick={() => setSelectedFile(file)}
+                        className={`gallery-header${selectedFile?.id === files[0].id ? " selected" : ""}`}
+                        onClick={() => setSelectedFile(files[0])}
                       >
-                        {file.filename.split("/").pop()}
+                        {title}
                       </div>
-                    ))}
+                    ) : (
+                      <>
+                        <div className="gallery-header" onClick={() => toggleGallery(title)}>
+                          <span className={`gallery-toggle${expanded ? " expanded" : ""}`}>▶</span>
+                          {title}
+                        </div>
+                        {expanded && files.map(file => (
+                          <div
+                            key={file.id}
+                            className={`gallery-file${selectedFile?.id === file.id ? " selected" : ""}`}
+                            onClick={() => setSelectedFile(file)}
+                          >
+                            {file.filename.split("/").pop()}
+                          </div>
+                        ))}
+                      </>
+                    )}
                   </div>
                 )
               })}
