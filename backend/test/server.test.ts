@@ -39,7 +39,7 @@ describe("GraphQL API", () => {
       })
 
     expect(response.status).toBe(200)
-    expect(response.body.data.files.length).toBe(7)
+    expect(response.body.data.files.length).toBe(24)
     expect(response.body.data.files).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

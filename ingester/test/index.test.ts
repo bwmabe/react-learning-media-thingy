@@ -43,10 +43,11 @@ describe("Ingester Script", () => {
 
     const items = await db.all("SELECT * FROM items ORDER BY id")
     
-    expect(items).toHaveLength(7)
+    expect(items).toHaveLength(24)
 
     expect(items).toEqual(
       expect.arrayContaining([
+        // originals
         expect.objectContaining({
             id: "img_8675",
             user: "photo_user",
@@ -102,7 +103,39 @@ describe("Ingester Script", () => {
             title: "White Rabbit",
             substring: "A white rabbit in a green field.",
             filename: "rabbit-373691_1280.jpg"
-        })
+        }),
+        // Cinnamon Spice (images only)
+        expect.objectContaining({
+            id: "csp_img_1",
+            user: "cinnamon_user",
+            service: "local",
+            title: "Cinnamon Spice",
+            substring: "Ground cinnamon spice in warm tones.",
+            filename: "cinnamon_spice_1.jpg"
+        }),
+        expect.objectContaining({ id: "csp_img_6", title: "Cinnamon Spice", filename: "cinnamon_spice_6.jpg" }),
+        // Cinnamon Swirl (videos only)
+        expect.objectContaining({
+            id: "csw_vid_1",
+            user: "cinnamon_user",
+            service: "local",
+            title: "Cinnamon Swirl",
+            substring: "A whirling pattern of cinnamon.",
+            filename: "cinnamon_swirl_1.mov"
+        }),
+        expect.objectContaining({ id: "csw_vid_4", title: "Cinnamon Swirl", filename: "cinnamon_swirl_4.mov" }),
+        // Cinnamon Roll (mixed)
+        expect.objectContaining({
+            id: "cr_img_1",
+            user: "cinnamon_user",
+            service: "local",
+            title: "Cinnamon Roll",
+            substring: "A sweet spiral of cinnamon and dough.",
+            filename: "cinnamon_roll_1.jpg"
+        }),
+        expect.objectContaining({ id: "cr_img_4", title: "Cinnamon Roll", filename: "cinnamon_roll_4.jpg" }),
+        expect.objectContaining({ id: "cr_vid_1", title: "Cinnamon Roll", filename: "cinnamon_roll_1.mov" }),
+        expect.objectContaining({ id: "cr_vid_3", title: "Cinnamon Roll", filename: "cinnamon_roll_3.mov" }),
       ])
     )
 
