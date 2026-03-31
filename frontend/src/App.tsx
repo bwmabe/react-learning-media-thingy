@@ -31,11 +31,15 @@ const getMediaUrl = (filename: string) => {
   return `${backendHost}/static/${filename}`
 }
 
+const videoMimeType = (filename: string) =>
+  filename.endsWith(".mov") ? "video/quicktime" : "video/mp4"
+
 export const App: React.FC = () => {
   const { loading, data } = useQuery<GetFilesResult>(GET_FILES)
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
+  const [fullscreen, setFullscreen] = useState(false)
 
   const userCards = useMemo(() => {
     const users = [...new Set(data?.files.map(f => f.user) ?? [])]
@@ -56,6 +60,28 @@ export const App: React.FC = () => {
     return acc
   }, {})
 
+  // Flat ordered list of all files across galleries for prev/next navigation
+  const fileNav = Object.entries(galleries).flatMap(([galleryTitle, files]) =>
+    files.map((file, i) => ({
+      file,
+      galleryTitle,
+      isFirstInGallery: i === 0,
+      isLastInGallery: i === files.length - 1,
+    }))
+  )
+
+  const currentNavIndex = fileNav.findIndex(e => e.file.id === selectedFile?.id)
+  const currentNav = fileNav[currentNavIndex]
+  const prevNav = currentNavIndex > 0 ? fileNav[currentNavIndex - 1] : null
+  const nextNav = currentNavIndex < fileNav.length - 1 ? fileNav[currentNavIndex + 1] : null
+  const prevIsGalleryJump = currentNav?.isFirstInGallery && prevNav !== null
+  const nextIsGalleryJump = currentNav?.isLastInGallery && nextNav !== null
+
+  const navigateToEntry = (entry: typeof fileNav[0]) => {
+    setSelectedFile(entry.file)
+    setExpandedGalleries(prev => new Set([...prev, entry.galleryTitle]))
+  }
+
   const toggleGallery = (title: string) => {
     setExpandedGalleries(prev => {
       const next = new Set(prev)
@@ -75,6 +101,7 @@ export const App: React.FC = () => {
     setSelectedUser(null)
     setSelectedFile(null)
     setExpandedGalleries(new Set())
+    setFullscreen(false)
   }
 
   return (
@@ -147,14 +174,31 @@ export const App: React.FC = () => {
                 <div className="media-player">
                   {isVideo(selectedFile.filename) ? (
                     <video key={selectedFile.id} controls playsInline>
-                      <source
-                        src={getMediaUrl(selectedFile.filename)}
-                        type={selectedFile.filename.endsWith(".mov") ? "video/quicktime" : "video/mp4"}
-                      />
+                      <source src={getMediaUrl(selectedFile.filename)} type={videoMimeType(selectedFile.filename)} />
                     </video>
                   ) : isImage(selectedFile.filename) ? (
-                    <img src={getMediaUrl(selectedFile.filename)} alt={selectedFile.title} />
+                    <img
+                      src={getMediaUrl(selectedFile.filename)}
+                      alt={selectedFile.title}
+                      onClick={() => setFullscreen(true)}
+                    />
                   ) : null}
+                </div>
+                <div className="main-nav">
+                  <button
+                    className={`main-nav-btn${prevIsGalleryJump ? " gallery-jump" : ""}`}
+                    disabled={!prevNav}
+                    onClick={() => prevNav && navigateToEntry(prevNav)}
+                  >
+                    {prevIsGalleryJump ? "«" : "‹"}
+                  </button>
+                  <button
+                    className={`main-nav-btn${nextIsGalleryJump ? " gallery-jump" : ""}`}
+                    disabled={!nextNav}
+                    onClick={() => nextNav && navigateToEntry(nextNav)}
+                  >
+                    {nextIsGalleryJump ? "»" : "›"}
+                  </button>
                 </div>
                 <div className="media-meta">
                   <div className="media-meta-row"><strong>ID:</strong> {selectedFile.id}</div>
@@ -166,6 +210,47 @@ export const App: React.FC = () => {
               <div className="empty-state">Select a file to view it</div>
             )}
           </main>
+        </div>
+      )}
+
+      {fullscreen && selectedFile && (
+        <div className="fs-overlay" onClick={() => setFullscreen(false)}>
+          {isImage(selectedFile.filename) ? (
+            <img
+              className="fs-image"
+              src={getMediaUrl(selectedFile.filename)}
+              alt={selectedFile.title}
+              onClick={e => e.stopPropagation()}
+            />
+          ) : isVideo(selectedFile.filename) ? (
+            <video
+              key={selectedFile.id}
+              className="fs-video"
+              controls
+              autoPlay
+              playsInline
+              onClick={e => e.stopPropagation()}
+            >
+              <source src={getMediaUrl(selectedFile.filename)} type={videoMimeType(selectedFile.filename)} />
+            </video>
+          ) : null}
+          {prevNav && (
+            <button
+              className={`fs-btn fs-prev${prevIsGalleryJump ? " gallery-jump" : ""}`}
+              onClick={e => { e.stopPropagation(); navigateToEntry(prevNav) }}
+            >
+              {prevIsGalleryJump ? "«" : "‹"}
+            </button>
+          )}
+          {nextNav && (
+            <button
+              className={`fs-btn fs-next${nextIsGalleryJump ? " gallery-jump" : ""}`}
+              onClick={e => { e.stopPropagation(); navigateToEntry(nextNav) }}
+            >
+              {nextIsGalleryJump ? "»" : "›"}
+            </button>
+          )}
+          <button className="fs-close" onClick={() => setFullscreen(false)}>×</button>
         </div>
       )}
     </div>
