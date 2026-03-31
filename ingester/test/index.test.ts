@@ -121,9 +121,9 @@ describe("Ingester Script", () => {
             service: "local",
             title: "Cinnamon Swirl",
             substring: "A whirling pattern of cinnamon.",
-            filename: "cinnamon_swirl_1.mov"
+            filename: "cinnamon_swirl_1.mp4"
         }),
-        expect.objectContaining({ id: "csw_vid_4", title: "Cinnamon Swirl", filename: "cinnamon_swirl_4.mov" }),
+        expect.objectContaining({ id: "csw_vid_4", title: "Cinnamon Swirl", filename: "cinnamon_swirl_4.mp4" }),
         // Cinnamon Roll (mixed)
         expect.objectContaining({
             id: "cr_img_1",
@@ -134,8 +134,8 @@ describe("Ingester Script", () => {
             filename: "cinnamon_roll_1.jpg"
         }),
         expect.objectContaining({ id: "cr_img_4", title: "Cinnamon Roll", filename: "cinnamon_roll_4.jpg" }),
-        expect.objectContaining({ id: "cr_vid_1", title: "Cinnamon Roll", filename: "cinnamon_roll_1.mov" }),
-        expect.objectContaining({ id: "cr_vid_3", title: "Cinnamon Roll", filename: "cinnamon_roll_3.mov" }),
+        expect.objectContaining({ id: "cr_vid_1", title: "Cinnamon Roll", filename: "cinnamon_roll_1.mp4" }),
+        expect.objectContaining({ id: "cr_vid_3", title: "Cinnamon Roll", filename: "cinnamon_roll_3.mp4" }),
       ])
     )
 
