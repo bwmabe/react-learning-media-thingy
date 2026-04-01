@@ -322,6 +322,34 @@ body {
 .fs-prev { left: 24px; }
 .fs-next { right: 24px; }
 
+.fs-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 32px 24px 20px;
+  background: linear-gradient(to top, rgba(17,17,27,0.9), transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fs-info-gallery {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ctp-text);
+}
+
+.fs-info-file {
+  font-size: 0.8rem;
+  color: var(--ctp-subtext1);
+}
+
+.fs-info-user {
+  font-size: 0.8rem;
+  color: var(--ctp-overlay0);
+}
+
 .fs-close {
   position: absolute;
   top: 16px;

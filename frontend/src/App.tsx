@@ -40,6 +40,7 @@ export const App: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
   const [fullscreen, setFullscreen] = useState(false)
+  const [fsUiVisible, setFsUiVisible] = useState(false)
 
   const userCards = useMemo(() => {
     const users = [...new Set(data?.files.map(f => f.user) ?? [])]
@@ -180,7 +181,7 @@ export const App: React.FC = () => {
                     <img
                       src={getMediaUrl(selectedFile.filename)}
                       alt={selectedFile.title}
-                      onClick={() => setFullscreen(true)}
+                      onClick={() => { setFullscreen(true); setFsUiVisible(false) }}
                     />
                   ) : null}
                 </div>
@@ -220,7 +221,7 @@ export const App: React.FC = () => {
               className="fs-image"
               src={getMediaUrl(selectedFile.filename)}
               alt={selectedFile.title}
-              onClick={e => e.stopPropagation()}
+              onClick={e => { e.stopPropagation(); setFsUiVisible(v => !v) }}
             />
           ) : isVideo(selectedFile.filename) ? (
             <video
@@ -234,23 +235,34 @@ export const App: React.FC = () => {
               <source src={getMediaUrl(selectedFile.filename)} type={videoMimeType(selectedFile.filename)} />
             </video>
           ) : null}
-          {prevNav && (
-            <button
-              className={`fs-btn fs-prev${prevIsGalleryJump ? " gallery-jump" : ""}`}
-              onClick={e => { e.stopPropagation(); navigateToEntry(prevNav) }}
-            >
-              {prevIsGalleryJump ? "«" : "‹"}
-            </button>
+
+          {/* UI chrome: always visible for video, tap-to-show for images */}
+          {(fsUiVisible || isVideo(selectedFile.filename)) && (
+            <>
+              {prevNav && (
+                <button
+                  className={`fs-btn fs-prev${prevIsGalleryJump ? " gallery-jump" : ""}`}
+                  onClick={e => { e.stopPropagation(); navigateToEntry(prevNav) }}
+                >
+                  {prevIsGalleryJump ? "«" : "‹"}
+                </button>
+              )}
+              {nextNav && (
+                <button
+                  className={`fs-btn fs-next${nextIsGalleryJump ? " gallery-jump" : ""}`}
+                  onClick={e => { e.stopPropagation(); navigateToEntry(nextNav) }}
+                >
+                  {nextIsGalleryJump ? "»" : "›"}
+                </button>
+              )}
+              <button className="fs-close" onClick={() => setFullscreen(false)}>×</button>
+              <div className="fs-info" onClick={e => e.stopPropagation()}>
+                <div className="fs-info-gallery">{selectedFile.title}</div>
+                <div className="fs-info-file">{selectedFile.filename.split("/").pop()}</div>
+                <div className="fs-info-user">{selectedFile.user}</div>
+              </div>
+            </>
           )}
-          {nextNav && (
-            <button
-              className={`fs-btn fs-next${nextIsGalleryJump ? " gallery-jump" : ""}`}
-              onClick={e => { e.stopPropagation(); navigateToEntry(nextNav) }}
-            >
-              {nextIsGalleryJump ? "»" : "›"}
-            </button>
-          )}
-          <button className="fs-close" onClick={() => setFullscreen(false)}>×</button>
         </div>
       )}
     </div>
