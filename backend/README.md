@@ -13,10 +13,11 @@ npm install
 
 The server is configured via environment variables:
 
-|    Variable     |  Default Value  |
-| --------------- | --------------- |
-| `PORT`          |          `4000` |
-| `DATABASE_NAME` | `./metadata.db` | 
+|    Variable     |  Default Value         |
+| --------------- | ---------------------- |
+| `PORT`          | `4000`                 |
+| `DATABASE_NAME` | `./metadata.db`        |
+| `MEDIA_PATH`    | `test-data/media/`     |
 
 ## Building
 
@@ -50,6 +51,7 @@ query GetAllFiles {
     service
     user
     filename
+    published
   }
 }
 ```
@@ -60,12 +62,13 @@ This query searches for items where the title contains the filter string.
 
 ```graphql
 query GetFilteredFiles {
-  files(filter: "Great") {
+  files(filter: "Summer") {
     id
     title
     service
     user
     filename
+    published
   }
 }
 ```

@@ -55,28 +55,43 @@ npm run dev
 
 This starts the backend on port 4000 and the frontend on port 3000 concurrently. Open http://localhost:3000 in your browser.
 
-## Usage
+## Getting started
 
-### Ingesting Data
+### 1. Organise your media files
 
-To ingest data into the application, you can use the TypeScript-based ingester. Before running, make sure you have installed the dependencies in the `ingester` directory:
+Put your images and videos in a directory of your choice, in whatever subdirectory structure you like.
 
-```bash
-npm --prefix ingester/ install
+### 2. Create a JSON sidecar for each file
+
+For every media file, create a `.json` file with the same name alongside it. For example, `photo.jpg` gets a `photo.jpg.json`:
+
+```json
+{
+    "id": "unique-id-here",
+    "user": "alice",
+    "service": "local",
+    "title": "Summer Holiday",
+    "substring": "A brief description of this file.",
+    "published": "2024-06-15T14:30:00"
+}
 ```
 
-Then, you can run the ingester script with the following command, replacing `<directory_to_search>` with the path to your JSON files and `<path_to_db>` with the desired database file path.
+- **`id`** — must be unique across all files
+- **`user`** — who the file belongs to; the landing page groups files by user
+- **`title`** — the gallery name; all files with the same title appear together in a gallery
+- **`substring`** — a short description
+- **`published`** — datetime in `YYYY-MM-DDTHH:MM:SS` format
 
-**Example:**
+### 3. Ingest your data
 
 ```bash
-npm --prefix ingester/ run ingest -- <directory_to_search> <path_to_db>
+npm run ingest -- /path/to/your/media your-data.db
 ```
 
-For example, to search for files in a directory named `my_media` and use a database file named `media.db`, you would run:
+### 4. Run with your data
 
 ```bash
-npm --prefix ingester/ run ingest -- my_media media.db
+DATABASE_NAME=$(pwd)/your-data.db MEDIA_PATH=/path/to/your/media npm run dev
 ```
 
 ## Third-Party Content

@@ -55,7 +55,7 @@ export async function createServer(dbPath?: string): Promise<{
 
   await server.start()
 
-  const mediaPath = path.resolve(__dirname, "../../test-data/media")
+  const mediaPath = process.env.MEDIA_PATH || path.resolve(__dirname, "../../test-data/media")
   app.use("/static", express.static(mediaPath))
 
   app.use(

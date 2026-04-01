@@ -2,6 +2,25 @@
 
 This component is responsible for ingesting metadata from JSON files into a SQLite database. It scans a specified directory for `.json` files, parses them, and inserts the data into an `items` table in a SQLite database.
 
+## JSON format
+
+Each media file needs a sidecar `.json` file with the same name (e.g. `photo.jpg` → `photo.jpg.json`):
+
+```json
+{
+    "id": "unique-id",
+    "user": "alice",
+    "service": "local",
+    "title": "Gallery Name",
+    "substring": "A short description.",
+    "published": "2024-06-15T14:30:00"
+}
+```
+
+Files with the same `title` are grouped into the same gallery. The `published` field should be in `YYYY-MM-DDTHH:MM:SS` format.
+
+> **Note:** the ingester drops and recreates the `items` table on every run, so re-ingesting will wipe previous data.
+
 ## Setup
 
 Install the dependencies:

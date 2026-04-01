@@ -1,6 +1,6 @@
 # Frontend
 
-This is a React application that displays media metadata fetched from the backend GraphQL server. It is built with Create React App and uses Apollo Client for data fetching.
+This is a React application that displays media metadata fetched from the backend GraphQL server. It is built with Vite and uses Apollo Client for data fetching.
 
 ## Setup
 
@@ -61,11 +61,11 @@ This application connects to the backend GraphQL server to fetch data. The endpo
 
 By default, it will attempt to connect to `http://localhost:4000/graphql`.
 
-To configure a different endpoint, create a file named `.env` in the `frontend` directory. Add the `REACT_APP_GRAPHQL_URI` variable to this file, pointing to your backend's URL.
+To configure a different endpoint, create a file named `.env` in the `frontend` directory. Add the `VITE_GRAPHQL_URI` variable to this file, pointing to your backend's URL.
 
 **Example `.env` file:**
 ```
-REACT_APP_GRAPHQL_URI=http://localhost:8080
+VITE_GRAPHQL_URI=http://localhost:8080/graphql
 ```
 
 The backend server runs on port `4000` by default, but its port can be changed via the `PORT` environment variable, as described in the [backend's README](../backend/README.md). Make sure the URI you provide here matches the address of your running backend instance.
