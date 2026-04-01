@@ -1,6 +1,7 @@
 import { gql } from "@apollo/client"
 import { useQuery } from "@apollo/client/react"
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { Route, Routes, useNavigate, useParams } from "react-router-dom"
 
 import { File, GetFilesResult } from "./Interfaces"
 import "./App.css"
@@ -35,9 +36,18 @@ const getMediaUrl = (filename: string) => {
 const videoMimeType = (filename: string) =>
   filename.endsWith(".mov") ? "video/quicktime" : "video/mp4"
 
-export const App: React.FC = () => {
-  const { loading, data } = useQuery<GetFilesResult>(GET_FILES)
-  const [selectedUser, setSelectedUser] = useState<string | null>(null)
+export const App: React.FC = () => (
+  <Routes>
+    <Route path="/" element={<AppContent />} />
+    <Route path="/:user" element={<AppContent />} />
+    <Route path="/:user/:gallery" element={<AppContent />} />
+  </Routes>
+)
+
+const AppContent: React.FC = () => {
+  const { user: selectedUser, gallery: galleryParam } = useParams<{ user?: string; gallery?: string }>()
+  const navigate = useNavigate()
+  const { loading, data, error } = useQuery<GetFilesResult>(GET_FILES)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -45,6 +55,22 @@ export const App: React.FC = () => {
   const [fullscreen, setFullscreen] = useState(false)
   const [fsUiVisible, setFsUiVisible] = useState(false)
   const swipeTouchStartX = useRef<number | null>(null)
+
+  // Reset view state when navigating to a different user
+  useEffect(() => {
+    setSelectedFile(null)
+    setExpandedGalleries(new Set())
+    setSidebarOpen(true)
+    setFullscreen(false)
+  }, [selectedUser])
+
+  // Auto-expand gallery from URL param
+  useEffect(() => {
+    if (galleryParam) {
+      const title = decodeURIComponent(galleryParam)
+      setExpandedGalleries(prev => new Set([...prev, title]))
+    }
+  }, [galleryParam])
 
   const userCards = useMemo(() => {
     const users = [...new Set(data?.files.map(f => f.user) ?? [])]
@@ -106,24 +132,23 @@ export const App: React.FC = () => {
   const toggleGallery = (title: string) => {
     setExpandedGalleries(prev => {
       const next = new Set(prev)
-      if (next.has(title)) next.delete(title)
-      else next.add(title)
+      if (next.has(title)) {
+        next.delete(title)
+        navigate(`/${encodeURIComponent(selectedUser!)}`)
+      } else {
+        next.add(title)
+        navigate(`/${encodeURIComponent(selectedUser!)}/${encodeURIComponent(title)}`)
+      }
       return next
     })
   }
 
   const selectUser = (user: string) => {
-    setSelectedUser(user)
-    setSelectedFile(null)
-    setExpandedGalleries(new Set())
-    setSidebarOpen(true)
+    navigate(`/${encodeURIComponent(user)}`)
   }
 
   const goHome = () => {
-    setSelectedUser(null)
-    setSelectedFile(null)
-    setExpandedGalleries(new Set())
-    setFullscreen(false)
+    navigate("/")
   }
 
   return (
