@@ -39,6 +39,7 @@ export const App: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [fullscreen, setFullscreen] = useState(false)
   const [fsUiVisible, setFsUiVisible] = useState(false)
   const swipeTouchStartX = useRef<number | null>(null)
@@ -97,6 +98,7 @@ export const App: React.FC = () => {
     setSelectedUser(user)
     setSelectedFile(null)
     setExpandedGalleries(new Set())
+    setSidebarOpen(true)
   }
 
   const goHome = () => {
@@ -109,8 +111,14 @@ export const App: React.FC = () => {
   return (
     <div className="app">
       <header className="app-header">
+        {selectedUser && (
+          <button className={`hamburger${sidebarOpen ? " open" : ""}`} aria-label="Show/hide sidebar" onClick={() => setSidebarOpen(v => !v)}>
+            <span /><span /><span />
+          </button>
+        )}
         <h1
           className={selectedUser ? "app-title clickable" : "app-title"}
+          aria-label={selectedUser ? "Go to home page" : undefined}
           onClick={selectedUser ? goHome : undefined}
         >
           Media Thing
@@ -132,7 +140,7 @@ export const App: React.FC = () => {
         </div>
       ) : (
         <div className="app-body">
-          <nav className="sidebar">
+          {sidebarOpen && <nav className="sidebar">
             <div className="sidebar-heading">Galleries</div>
             <div className="sidebar-list">
               {Object.entries(galleries).map(([title, files]) => {
@@ -167,7 +175,7 @@ export const App: React.FC = () => {
                 )
               })}
             </div>
-          </nav>
+          </nav>}
 
           <main className="main">
             {selectedFile ? (
