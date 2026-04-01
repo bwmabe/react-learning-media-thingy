@@ -29,7 +29,7 @@ const isImage = (filename: string) => {
 }
 
 const getMediaUrl = (filename: string) => {
-  const backendHost = import.meta.env.VITE_GRAPHQL_URI?.split("/graphql")[0] || "http://localhost:4000"
+  const backendHost = import.meta.env.VITE_GRAPHQL_URI?.split("/graphql")[0] ?? "http://localhost:4000"
   return `${backendHost}/static/${filename}`
 }
 
