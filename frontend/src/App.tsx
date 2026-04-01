@@ -112,13 +112,14 @@ export const App: React.FC = () => {
     <div className="app">
       <header className="app-header">
         {selectedUser && (
-          <button className={`hamburger${sidebarOpen ? " open" : ""}`} aria-label="Show/hide sidebar" onClick={() => setSidebarOpen(v => !v)}>
+          <button className={`hamburger${sidebarOpen ? " open" : ""}`} aria-label="Show/hide sidebar" title="Show/hide sidebar" onClick={() => setSidebarOpen(v => !v)}>
             <span /><span /><span />
           </button>
         )}
         <h1
           className={selectedUser ? "app-title clickable" : "app-title"}
           aria-label={selectedUser ? "Go to home page" : undefined}
+          title={selectedUser ? "Go to home page" : undefined}
           onClick={selectedUser ? goHome : undefined}
         >
           Media Thing
