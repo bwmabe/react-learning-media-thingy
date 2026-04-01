@@ -18,9 +18,20 @@ async function main() {
   program
     .argument("<directory_to_search>", "The directory to search for JSON files.")
     .argument("<path_to_db>", "The path to the SQLite database file.")
+    .option("--reset", "Delete the existing database before ingesting.")
     .parse(process.argv)
 
   const [searchDir, dbPath] = program.args
+  const { reset } = program.opts<{ reset: boolean }>()
+
+  if (reset) {
+    try {
+      await fs.unlink(dbPath)
+      console.log(`Deleted existing database: ${dbPath}`)
+    } catch (err) {
+      if ((err as { code: string }).code !== "ENOENT") throw err
+    }
+  }
 
   console.log(`Using database at: ${dbPath}`)
   console.log(`Scanning for files in: ${searchDir}`)
