@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client"
 import { useQuery } from "@apollo/client/react"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Route, Routes, useNavigate, useParams } from "react-router-dom"
+import { Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom"
 
 import { File, GetFilesResult } from "./Interfaces"
 import "./App.css"
@@ -41,20 +41,43 @@ export const App: React.FC = () => (
     <Route path="/" element={<AppContent />} />
     <Route path="/:user" element={<AppContent />} />
     <Route path="/:user/:gallery" element={<AppContent />} />
+    <Route path="/:user/:gallery/:fileId" element={<AppContent />} />
   </Routes>
 )
 
 const AppContent: React.FC = () => {
-  const { user: selectedUser, gallery: galleryParam } = useParams<{ user?: string; gallery?: string }>()
+  const { user: selectedUser, gallery: galleryParam, fileId: fileIdParam } = useParams<{
+    user?: string; gallery?: string; fileId?: string
+  }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { loading, data, error } = useQuery<GetFilesResult>(GET_FILES)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [sort, setSort] = useState<{ by: "alpha" | "date"; dir: "asc" | "desc" }>({ by: "alpha", dir: "asc" })
   const [fullscreen, setFullscreen] = useState(false)
   const [fsUiVisible, setFsUiVisible] = useState(false)
   const swipeTouchStartX = useRef<number | null>(null)
+
+  // Derive sort from ?sort=by-dir query param; default is alpha-asc
+  const sortParam = searchParams.get("sort") ?? "alpha-asc"
+  const [sortBy, sortDir] = sortParam.split("-") as ["alpha" | "date", "asc" | "desc"]
+  const sort = { by: sortBy, dir: sortDir }
+
+  // Preserve sort param across path navigations
+  const sortSearch = searchParams.toString() ? `?${searchParams.toString()}` : ""
+
+  const setSort = (newSort: { by: "alpha" | "date"; dir: "asc" | "desc" }) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (newSort.by === "alpha" && newSort.dir === "asc") {
+        next.delete("sort") // default — no param needed
+      } else {
+        next.set("sort", `${newSort.by}-${newSort.dir}`)
+      }
+      return next
+    })
+  }
 
   // Reset view state when navigating to a different user
   useEffect(() => {
@@ -62,7 +85,7 @@ const AppContent: React.FC = () => {
     setExpandedGalleries(new Set())
     setSidebarOpen(true)
     setFullscreen(false)
-    setSort({ by: "alpha", dir: "asc" })
+    // sort resets naturally: selectUser navigates without ?sort
   }, [selectedUser])
 
   // Auto-expand gallery from URL param
@@ -72,6 +95,15 @@ const AppContent: React.FC = () => {
       setExpandedGalleries(prev => new Set([...prev, title]))
     }
   }, [galleryParam])
+
+  // Sync selected file from URL
+  useEffect(() => {
+    if (!fileIdParam || !data) {
+      setSelectedFile(null)
+      return
+    }
+    setSelectedFile(data.files.find(f => f.id === decodeURIComponent(fileIdParam)) ?? null)
+  }, [fileIdParam, data])
 
   const userCards = useMemo(() => {
     const users = [...new Set(data?.files.map(f => f.user) ?? [])].sort((a, b) => a.localeCompare(b))
@@ -160,9 +192,13 @@ const AppContent: React.FC = () => {
   const prevIsGalleryJump = currentNav?.isFirstInGallery && prevNav !== null
   const nextIsGalleryJump = currentNav?.isLastInGallery && nextNav !== null
 
+  const navigateToFile = (user: string, galleryTitle: string, fileId: string) => {
+    navigate(`/${encodeURIComponent(user)}/${encodeURIComponent(galleryTitle)}/${encodeURIComponent(fileId)}${sortSearch}`)
+  }
+
   const navigateToEntry = (entry: typeof fileNav[0]) => {
-    setSelectedFile(entry.file)
     setExpandedGalleries(prev => new Set([...prev, entry.galleryTitle]))
+    navigateToFile(selectedUser!, entry.galleryTitle, entry.file.id)
   }
 
   const toggleGallery = (title: string) => {
@@ -170,10 +206,10 @@ const AppContent: React.FC = () => {
       const next = new Set(prev)
       if (next.has(title)) {
         next.delete(title)
-        navigate(`/${encodeURIComponent(selectedUser!)}`)
+        navigate(`/${encodeURIComponent(selectedUser!)}${sortSearch}`)
       } else {
         next.add(title)
-        navigate(`/${encodeURIComponent(selectedUser!)}/${encodeURIComponent(title)}`)
+        navigate(`/${encodeURIComponent(selectedUser!)}/${encodeURIComponent(title)}${sortSearch}`)
       }
       return next
     })
@@ -226,15 +262,15 @@ const AppContent: React.FC = () => {
               <div className="sort-toggle">
                 <button
                   className={sort.by === "alpha" ? "active" : ""}
-                  onClick={() => sort.by === "alpha"
-                    ? setSort(s => ({ ...s, dir: s.dir === "asc" ? "desc" : "asc" }))
-                    : setSort({ by: "alpha", dir: "asc" })}
+                  onClick={() => setSort(sort.by === "alpha"
+                    ? { by: "alpha", dir: sort.dir === "asc" ? "desc" : "asc" }
+                    : { by: "alpha", dir: "asc" })}
                 >A–Z {sort.by === "alpha" && (sort.dir === "asc" ? "↑" : "↓")}</button>
                 <button
                   className={sort.by === "date" ? "active" : ""}
-                  onClick={() => sort.by === "date"
-                    ? setSort(s => ({ ...s, dir: s.dir === "asc" ? "desc" : "asc" }))
-                    : setSort({ by: "date", dir: "desc" })}
+                  onClick={() => setSort(sort.by === "date"
+                    ? { by: "date", dir: sort.dir === "asc" ? "desc" : "asc" }
+                    : { by: "date", dir: "desc" })}
                 >Date {sort.by === "date" && (sort.dir === "asc" ? "↑" : "↓")}</button>
               </div>
             </div>
@@ -249,7 +285,7 @@ const AppContent: React.FC = () => {
                     {files.length === 1 ? (
                       <div
                         className={`gallery-header${selectedFile?.id === files[0].id ? " selected" : ""}`}
-                        onClick={() => setSelectedFile(files[0])}
+                        onClick={() => navigateToFile(selectedUser, title, files[0].id)}
                       >
                         {title}
                       </div>
@@ -263,7 +299,7 @@ const AppContent: React.FC = () => {
                           <div
                             key={file.id}
                             className={`gallery-file${selectedFile?.id === file.id ? " selected" : ""}`}
-                            onClick={() => setSelectedFile(file)}
+                            onClick={() => navigateToFile(selectedUser, title, file.id)}
                           >
                             {file.filename.split("/").pop()}
                           </div>
