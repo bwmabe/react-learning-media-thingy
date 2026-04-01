@@ -36,6 +36,8 @@ const getMediaUrl = (filename: string) => {
 const videoMimeType = (filename: string) =>
   filename.endsWith(".mov") ? "video/quicktime" : "video/mp4"
 
+const fileTitle = (file: File) => file.title || file.filename.split("/").pop() || file.filename
+
 export const App: React.FC = () => (
   <Routes>
     <Route path="/" element={<AppContent />} />
@@ -120,8 +122,9 @@ const AppContent: React.FC = () => {
   const userFiles = (data?.files ?? []).filter(f => f.user === selectedUser)
 
   const galleriesRaw = userFiles.reduce<Record<string, File[]>>((acc, file) => {
-    if (!acc[file.title]) acc[file.title] = []
-    acc[file.title].push(file)
+    const key = fileTitle(file)
+    if (!acc[key]) acc[key] = []
+    acc[key].push(file)
     return acc
   }, {})
 
@@ -315,7 +318,7 @@ const AppContent: React.FC = () => {
           <main className="main">
             {selectedFile ? (
               <>
-                <h2 className="media-title">{selectedFile.title}</h2>
+                <h2 className="media-title">{fileTitle(selectedFile)}</h2>
                 <div className="media-player">
                   {isVideo(selectedFile.filename) ? (
                     <video key={selectedFile.id} controls playsInline>
@@ -413,7 +416,7 @@ const AppContent: React.FC = () => {
               )}
               <button className="fs-close" onClick={() => setFullscreen(false)}>×</button>
               <div className="fs-info" onClick={e => e.stopPropagation()}>
-                <div className="fs-info-gallery">{selectedFile.title}</div>
+                <div className="fs-info-gallery">{fileTitle(selectedFile)}</div>
                 <div className="fs-info-file">{selectedFile.filename.split("/").pop()}</div>
                 <div className="fs-info-user">{selectedFile.user}</div>
               </div>
