@@ -19,10 +19,11 @@ async function main() {
     .argument("<directory_to_search>", "The directory to search for JSON files.")
     .argument("<path_to_db>", "The path to the SQLite database file.")
     .option("--reset", "Delete the existing database before ingesting.")
+    .option("--continue-on-error", "Skip invalid files instead of crashing; report them at the end.")
     .parse(process.argv)
 
   const [searchDir, dbPath] = program.args
-  const { reset } = program.opts<{ reset: boolean }>()
+  const { reset, continueOnError } = program.opts<{ reset: boolean; continueOnError: boolean }>()
 
   if (reset) {
     try {
@@ -91,23 +92,33 @@ async function main() {
 
   const jsonFiles = await glob("**/*.json", { cwd: searchDir })
   const scannedFilenames = new Set<string>()
+  const errors: { filename: string; error: string }[] = []
   let added = 0, updated = 0, skipped = 0
 
   // Read files in parallel batches to avoid saturating file descriptors
   const BATCH_SIZE = 64
-  type FileResult = { filename: string; mtime: number; data: Partial<MediaMetadata> } | { filename: string; skip: true }
+  type FileResult =
+    | { filename: string; mtime: number; data: Partial<MediaMetadata> }
+    | { filename: string; skip: true }
+    | { filename: string; error: string }
 
   async function processFile(file: string): Promise<FileResult> {
     const filename = file.replace(/\.json$/, "")
     const filePath = path.join(searchDir, file)
-    const mtime = Math.floor((await fs.stat(filePath)).mtimeMs)
 
-    if (existingMtimes.get(filename) === mtime) {
-      return { filename, skip: true }
+    try {
+      const mtime = Math.floor((await fs.stat(filePath)).mtimeMs)
+
+      if (existingMtimes.get(filename) === mtime) {
+        return { filename, skip: true }
+      }
+
+      const data = JSON.parse(await fs.readFile(filePath, "utf-8")) as Partial<MediaMetadata>
+      return { filename, mtime, data }
+    } catch (err) {
+      if (!continueOnError) throw new Error(`Failed to process ${filePath}: ${(err as Error).message}`)
+      return { filename, error: (err as Error).message }
     }
-
-    const data = JSON.parse(await fs.readFile(filePath, "utf-8")) as Partial<MediaMetadata>
-    return { filename, mtime, data }
   }
 
   const stmt = await db.prepare(
@@ -125,6 +136,11 @@ async function main() {
 
         if ("skip" in result) {
           skipped++
+          continue
+        }
+
+        if ("error" in result) {
+          errors.push({ filename: result.filename, error: result.error })
           continue
         }
 
@@ -159,6 +175,14 @@ async function main() {
 
   const result = await db.get<{ count: number }>("SELECT COUNT(*) as count FROM items")
   console.log(`Done: ${added} added, ${updated} updated, ${skipped} skipped. Total: ${result?.count}`)
+
+  if (errors.length > 0) {
+    console.error(`\n${errors.length} file(s) failed:`)
+    for (const { filename, error } of errors) {
+      console.error(`  ${filename}: ${error}`)
+    }
+    process.exit(1)
+  }
 
   await db.close()
 }
