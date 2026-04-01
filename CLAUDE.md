@@ -29,8 +29,8 @@ test-data/  Sample media files and test DB
 ## Key gotchas
 
 - **Media path is hardcoded** in `backend/src/server.ts` — serves from `../../test-data/media` relative to compiled output. Don't move media files without updating this.
-- **Ingester is destructive** — it drops and recreates the `items` table every run. Running it again on a different directory wipes the previous data.
-- **`getMediaUrl` in `App.tsx`** splits `REACT_APP_GRAPHQL_URI` on `/graphql` to derive the backend host. Keep that env var in the standard format (`http://host:port/graphql`) or this breaks.
+- **Ingester is incremental** — reruns on the same directory only process new or modified files (tracked via sidecar mtime). Running it on a different directory will add those files but won't remove the old ones — you'd need to delete the DB and start fresh.
+- **`getMediaUrl` in `App.tsx`** splits `VITE_GRAPHQL_URI` on `/graphql` to derive the backend host. Keep that env var in the standard format (`http://host:port/graphql`) or this breaks. When using the Vite proxy, set it to `/graphql` (relative).
 
 ## Styling
 
