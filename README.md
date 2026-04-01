@@ -18,6 +18,51 @@ There are a few parts to this project:
 *   `backend/`: This is a GraphQL server that the frontend talks to. It gets data from the database and sends it to the frontend.
 *   `ingester/`: This is a script that reads your media files (the JSON ones) and puts them into a database so the backend can find them.
 
+## Setup
+
+### Prerequisites
+
+- Node.js (v18+)
+- npm
+
+### Install dependencies
+
+```bash
+npm run install-all
+```
+
+This installs dependencies for the root, backend, frontend, and ingester all at once.
+
+### Environment
+
+The backend needs to know where the SQLite database is. Create a `.env` file in `backend/`:
+
+```
+DATABASE_NAME=../test-data/test.db
+```
+
+If you skip this, it defaults to `./metadata.db` in the backend directory.
+
+The frontend needs to know where the backend is. Create a `.env` file in `frontend/`:
+
+```
+VITE_GRAPHQL_URI=http://localhost:4000/graphql
+```
+
+### Ingest test data
+
+```bash
+npm run ingest -- test-data/media test-data/test.db
+```
+
+### Run the dev server
+
+```bash
+npm run dev
+```
+
+This starts the backend on port 4000 and the frontend on port 3000 concurrently. Open http://localhost:3000 in your browser.
+
 ## Usage
 
 ### Ingesting Data
