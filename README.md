@@ -55,13 +55,28 @@ npm run dev
 
 This starts the backend on port 4000 and the frontend on port 3000 concurrently. Open http://localhost:3000 in your browser.
 
-## Getting started
+## Setting up with real data
 
 ### 1. Organise your media files
 
-Put your images and videos in a directory of your choice, in whatever subdirectory structure you like.
+Put your images and videos in a directory of your choice. Subdirectories are fine — the ingester scans recursively.
 
-### 2. Create a JSON sidecar for each file
+```
+/mnt/media/
+  alice/
+    holiday/
+      photo1.jpg
+      photo1.jpg.json
+      photo2.jpg
+      photo2.jpg.json
+    videos/
+      clip.mp4
+      clip.mp4.json
+  bob/
+    ...
+```
+
+### 2. Create a JSON sidecar for each media file
 
 For every media file, create a `.json` file with the same name alongside it. For example, `photo.jpg` gets a `photo.jpg.json`:
 
@@ -77,22 +92,30 @@ For every media file, create a `.json` file with the same name alongside it. For
 ```
 
 - **`id`** — must be unique across all files
-- **`user`** — who the file belongs to; the landing page groups files by user
-- **`title`** — the gallery name; all files with the same title appear together in a gallery
+- **`user`** — groups files on the landing page
+- **`title`** — gallery name; all files with the same title appear together
 - **`substring`** — a short description
 - **`published`** — datetime in `YYYY-MM-DDTHH:MM:SS` format
 
 ### 3. Ingest your data
 
-```bash
-npm run ingest -- /path/to/your/media your-data.db
-```
-
-### 4. Run with your data
+Run the ingester, passing your media root and a path for the database file:
 
 ```bash
-DATABASE_NAME=$(pwd)/your-data.db MEDIA_PATH=/path/to/your/media npm run dev
+npm run ingest -- /mnt/media /srv/media-thing/data.db
 ```
+
+Use absolute paths. The ingester stores filenames relative to the media root you provide — **`MEDIA_PATH` must point to the same directory** when you run the server.
+
+> **Warning:** The ingester drops and recreates the database every run. Running it again wipes all previous data.
+
+### 4. Run the server
+
+```bash
+DATABASE_NAME=/srv/media-thing/data.db MEDIA_PATH=/mnt/media npm run dev
+```
+
+The frontend is at http://localhost:3000. From other machines on the network, use the server's IP address instead of `localhost`.
 
 ## Third-Party Content
 
