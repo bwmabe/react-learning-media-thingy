@@ -3,5 +3,6 @@
     "user": "photo_user",
     "service": "local",
     "title": "White Rabbit",
-    "substring": "A white rabbit in a green field."
+    "substring": "A white rabbit in a green field.",
+    "published": "2023-07-01T10:00:00"
 }

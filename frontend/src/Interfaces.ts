@@ -3,6 +3,7 @@ export interface File {
   title: string
   user: string
   filename: string
+  published: string
 }
 
 export interface GetFilesResult {

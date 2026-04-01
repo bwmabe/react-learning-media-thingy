@@ -14,6 +14,7 @@ interface FileMetadata {
   title: string
   substring: string
   filename: string
+  published: string
 }
 
 export async function createServer(dbPath?: string): Promise<{

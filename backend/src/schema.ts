@@ -6,6 +6,7 @@ export const typeDefs = `#graphql
     title: String
     substring: String
     filename: String
+    published: String
   }
 
   type Query {

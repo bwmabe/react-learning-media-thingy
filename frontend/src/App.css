@@ -115,6 +115,39 @@ body {
   letter-spacing: 0.08em;
   color: var(--ctp-overlay0);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sort-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.sort-toggle button {
+  background: none;
+  border: 1px solid var(--ctp-surface1);
+  border-radius: 4px;
+  color: var(--ctp-overlay0);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.sort-toggle button:hover {
+  background: var(--ctp-surface0);
+  color: var(--ctp-subtext1);
+}
+
+.sort-toggle button.active {
+  background: var(--ctp-surface0);
+  border-color: var(--ctp-mauve);
+  color: var(--ctp-mauve);
 }
 
 .sidebar-list {

@@ -12,6 +12,7 @@ const GET_FILES = gql`
       title
       user
       filename
+      published
     }
   }
 `
@@ -40,6 +41,7 @@ export const App: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sort, setSort] = useState<"alpha" | "date">("alpha")
   const [fullscreen, setFullscreen] = useState(false)
   const [fsUiVisible, setFsUiVisible] = useState(false)
   const swipeTouchStartX = useRef<number | null>(null)
@@ -57,11 +59,27 @@ export const App: React.FC = () => {
 
   const userFiles = (data?.files ?? []).filter(f => f.user === selectedUser)
 
-  const galleries = userFiles.reduce<Record<string, File[]>>((acc, file) => {
+  const galleriesRaw = userFiles.reduce<Record<string, File[]>>((acc, file) => {
     if (!acc[file.title]) acc[file.title] = []
     acc[file.title].push(file)
     return acc
   }, {})
+
+  // Sort gallery entries within each gallery, then sort the galleries themselves
+  const galleries = Object.fromEntries(
+    Object.entries(galleriesRaw)
+      .map(([title, files]) => [
+        title,
+        [...files].sort((a, b) =>
+          sort === "date" ? a.published.localeCompare(b.published) : a.filename.localeCompare(b.filename)
+        ),
+      ])
+      .sort(([aTitle, aFiles], [bTitle, bFiles]) =>
+        sort === "date"
+          ? bFiles[0].published.localeCompare(aFiles[0].published)  // newest gallery first
+          : aTitle.localeCompare(bTitle)
+      )
+  )
 
   // Flat ordered list of all files across galleries for prev/next navigation
   const fileNav = Object.entries(galleries).flatMap(([galleryTitle, files]) =>
@@ -142,7 +160,13 @@ export const App: React.FC = () => {
       ) : (
         <div className="app-body">
           {sidebarOpen && <nav className="sidebar">
-            <div className="sidebar-heading">Galleries</div>
+            <div className="sidebar-heading">
+              Galleries
+              <div className="sort-toggle">
+                <button className={sort === "alpha" ? "active" : ""} onClick={() => setSort("alpha")}>A–Z</button>
+                <button className={sort === "date" ? "active" : ""} onClick={() => setSort("date")}>Date</button>
+              </div>
+            </div>
             <div className="sidebar-list">
               {Object.entries(galleries).map(([title, files]) => {
                 const expanded = expandedGalleries.has(title)

@@ -11,6 +11,7 @@ interface MediaMetadata {
   service: string;
   title: string;
   substring: string;
+  published: string;
 }
 
 async function main() {
@@ -37,7 +38,8 @@ async function main() {
       service TEXT,
       title TEXT,
       substring TEXT,
-      filename TEXT
+      filename TEXT,
+      published TEXT
     );
   `)
 
@@ -53,13 +55,14 @@ async function main() {
     const service = data.service ?? ""
     const title = data.title ?? ""
     const substring = data.substring ?? ""
+    const published = data.published ?? ""
     const filename = file.replace(/\.json$/, "")
 
     console.log(`Ingesting: ${filename}`)
 
     await db.run(
-      "INSERT INTO items (id, user, service, title, substring, filename) VALUES (?, ?, ?, ?, ?, ?)",
-      [id, user, service, title, substring, filename]
+      "INSERT INTO items (id, user, service, title, substring, filename, published) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [id, user, service, title, substring, filename, published]
     )
   }
 
