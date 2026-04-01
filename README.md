@@ -35,14 +35,6 @@ This installs dependencies for the root, backend, frontend, and ingester all at 
 
 ### Environment
 
-The backend needs to know where the SQLite database is. Create a `.env` file in `backend/`:
-
-```
-DATABASE_NAME=../test-data/test.db
-```
-
-If you skip this, it defaults to `./metadata.db` in the backend directory.
-
 The frontend needs to know where the backend is. Create a `.env` file in `frontend/`:
 
 ```
