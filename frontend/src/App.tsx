@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client"
 import { useQuery } from "@apollo/client/react"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
 import { File, GetFilesResult } from "./Interfaces"
 import "./App.css"
@@ -41,6 +41,7 @@ export const App: React.FC = () => {
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
   const [fullscreen, setFullscreen] = useState(false)
   const [fsUiVisible, setFsUiVisible] = useState(false)
+  const swipeTouchStartX = useRef<number | null>(null)
 
   const userCards = useMemo(() => {
     const users = [...new Set(data?.files.map(f => f.user) ?? [])]
@@ -215,7 +216,18 @@ export const App: React.FC = () => {
       )}
 
       {fullscreen && selectedFile && (
-        <div className="fs-overlay" onClick={() => setFullscreen(false)}>
+        <div
+          className="fs-overlay"
+          onClick={() => setFullscreen(false)}
+          onTouchStart={e => { swipeTouchStartX.current = e.touches[0].clientX }}
+          onTouchEnd={e => {
+            if (swipeTouchStartX.current === null) return
+            const delta = e.changedTouches[0].clientX - swipeTouchStartX.current
+            swipeTouchStartX.current = null
+            if (delta > 50 && prevNav) navigateToEntry(prevNav)
+            else if (delta < -50 && nextNav) navigateToEntry(nextNav)
+          }}
+        >
           {isImage(selectedFile.filename) ? (
             <img
               className="fs-image"
