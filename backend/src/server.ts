@@ -51,6 +51,7 @@ export async function createServer(dbPath?: string): Promise<{
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: false,
   })
 
   await server.start()

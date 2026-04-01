@@ -82,6 +82,7 @@ const AppContent: React.FC = () => {
   }, [data])
 
   if (loading) return <div className="empty-state">Loading...</div>
+  if (error) return <div className="empty-state">Error: {error.message}</div>
 
   const userFiles = (data?.files ?? []).filter(f => f.user === selectedUser)
 

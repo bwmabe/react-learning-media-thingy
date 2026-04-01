@@ -5,5 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    host: true,
+    proxy: {
+      "/graphql": "http://127.0.0.1:4000",
+      "/static": "http://127.0.0.1:4000",
+    },
   },
 })
