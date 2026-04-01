@@ -232,6 +232,30 @@ body {
   font-weight: 600;
 }
 
+/* Date group headers */
+.sidebar-date-year {
+  padding: 10px 16px 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ctp-mauve);
+  border-top: 1px solid var(--ctp-surface0);
+  margin-top: 4px;
+}
+
+.sidebar-date-year:first-child {
+  border-top: none;
+  margin-top: 0;
+}
+
+.sidebar-date-month {
+  padding: 6px 16px 2px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ctp-overlay0);
+}
+
 /* Gallery tree */
 .gallery-header {
   padding: 10px 16px;

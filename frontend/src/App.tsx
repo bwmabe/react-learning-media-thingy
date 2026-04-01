@@ -51,7 +51,7 @@ const AppContent: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [sort, setSort] = useState<"alpha" | "date">("alpha")
+  const [sort, setSort] = useState<{ by: "alpha" | "date"; dir: "asc" | "desc" }>({ by: "alpha", dir: "asc" })
   const [fullscreen, setFullscreen] = useState(false)
   const [fsUiVisible, setFsUiVisible] = useState(false)
   const swipeTouchStartX = useRef<number | null>(null)
@@ -62,6 +62,7 @@ const AppContent: React.FC = () => {
     setExpandedGalleries(new Set())
     setSidebarOpen(true)
     setFullscreen(false)
+    setSort({ by: "alpha", dir: "asc" })
   }, [selectedUser])
 
   // Auto-expand gallery from URL param
@@ -73,7 +74,7 @@ const AppContent: React.FC = () => {
   }, [galleryParam])
 
   const userCards = useMemo(() => {
-    const users = [...new Set(data?.files.map(f => f.user) ?? [])]
+    const users = [...new Set(data?.files.map(f => f.user) ?? [])].sort((a, b) => a.localeCompare(b))
     return users.map(user => {
       const images = (data?.files ?? []).filter(f => f.user === user && isImage(f.filename))
       const preview = images.length > 0 ? images[Math.floor(Math.random() * images.length)] : null
@@ -97,16 +98,50 @@ const AppContent: React.FC = () => {
     Object.entries(galleriesRaw)
       .map(([title, files]) => [
         title,
-        [...files].sort((a, b) =>
-          sort === "date" ? a.published.localeCompare(b.published) : a.filename.localeCompare(b.filename)
-        ),
+        [...files].sort((a, b) => {
+          const cmp = sort.by === "date" ? a.published.localeCompare(b.published) : a.filename.localeCompare(b.filename)
+          return sort.dir === "asc" ? cmp : -cmp
+        }),
       ])
-      .sort(([aTitle, aFiles], [bTitle, bFiles]) =>
-        sort === "date"
-          ? bFiles[0].published.localeCompare(aFiles[0].published)  // newest gallery first
+      .sort(([aTitle, aFiles], [bTitle, bFiles]) => {
+        const cmp = sort.by === "date"
+          ? aFiles[0].published.localeCompare(bFiles[0].published)
           : aTitle.localeCompare(bTitle)
-      )
+        return sort.dir === "asc" ? cmp : -cmp
+      })
   )
+
+  // Build sidebar items, inserting year/month headers when sorting by date
+  type SidebarItem =
+    | { kind: "year"; label: string }
+    | { kind: "month"; label: string }
+    | { kind: "gallery"; title: string; files: File[] }
+
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+
+  const sidebarItems: SidebarItem[] = []
+  if (sort.by === "date") {
+    let lastYear = "", lastMonth = ""
+    for (const [title, files] of Object.entries(galleries)) {
+      const pub = files[0].published
+      const year = pub.slice(0, 4)
+      const month = pub.slice(0, 7)
+      if (year !== lastYear) {
+        sidebarItems.push({ kind: "year", label: year })
+        lastYear = year
+        lastMonth = ""
+      }
+      if (month !== lastMonth) {
+        sidebarItems.push({ kind: "month", label: MONTHS[parseInt(pub.slice(5, 7), 10) - 1] })
+        lastMonth = month
+      }
+      sidebarItems.push({ kind: "gallery", title, files })
+    }
+  } else {
+    for (const [title, files] of Object.entries(galleries)) {
+      sidebarItems.push({ kind: "gallery", title, files })
+    }
+  }
 
   // Flat ordered list of all files across galleries for prev/next navigation
   const fileNav = Object.entries(galleries).flatMap(([galleryTitle, files]) =>
@@ -189,12 +224,25 @@ const AppContent: React.FC = () => {
             <div className="sidebar-heading">
               Galleries
               <div className="sort-toggle">
-                <button className={sort === "alpha" ? "active" : ""} onClick={() => setSort("alpha")}>A–Z</button>
-                <button className={sort === "date" ? "active" : ""} onClick={() => setSort("date")}>Date</button>
+                <button
+                  className={sort.by === "alpha" ? "active" : ""}
+                  onClick={() => sort.by === "alpha"
+                    ? setSort(s => ({ ...s, dir: s.dir === "asc" ? "desc" : "asc" }))
+                    : setSort({ by: "alpha", dir: "asc" })}
+                >A–Z {sort.by === "alpha" && (sort.dir === "asc" ? "↑" : "↓")}</button>
+                <button
+                  className={sort.by === "date" ? "active" : ""}
+                  onClick={() => sort.by === "date"
+                    ? setSort(s => ({ ...s, dir: s.dir === "asc" ? "desc" : "asc" }))
+                    : setSort({ by: "date", dir: "desc" })}
+                >Date {sort.by === "date" && (sort.dir === "asc" ? "↑" : "↓")}</button>
               </div>
             </div>
             <div className="sidebar-list">
-              {Object.entries(galleries).map(([title, files]) => {
+              {sidebarItems.map(item => {
+                if (item.kind === "year") return <div key={`year-${item.label}`} className="sidebar-date-year">{item.label}</div>
+                if (item.kind === "month") return <div key={`month-${item.label}`} className="sidebar-date-month">{item.label}</div>
+                const { title, files } = item
                 const expanded = expandedGalleries.has(title)
                 return (
                   <div key={title}>
@@ -264,6 +312,7 @@ const AppContent: React.FC = () => {
                 <div className="media-meta">
                   <div className="media-meta-row"><strong>ID:</strong> {selectedFile.id}</div>
                   <div className="media-meta-row"><strong>User:</strong> {selectedFile.user || "N/A"}</div>
+                  <div className="media-meta-row"><strong>Date:</strong> {selectedFile.published}</div>
                   <div className="media-meta-row"><strong>File:</strong> {selectedFile.filename}</div>
                 </div>
               </>
