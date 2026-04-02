@@ -61,6 +61,13 @@ const AppContent: React.FC = () => {
   const [fullscreen, setFullscreen] = useState(false)
   const [fsUiVisible, setFsUiVisible] = useState(false)
   const swipeTouchStartX = useRef<number | null>(null)
+  const keyHandlerRef = useRef<((e: KeyboardEvent) => void) | null>(null)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => keyHandlerRef.current?.(e)
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [])
 
   // Derive sort from ?sort=by-dir query param; default is alpha-asc
   const sortParam = searchParams.get("sort") ?? "alpha-asc"
@@ -203,6 +210,12 @@ const AppContent: React.FC = () => {
   const navigateToEntry = (entry: typeof fileNav[0]) => {
     setExpandedGalleries(prev => new Set([...prev, entry.galleryTitle]))
     navigateToFile(selectedUser!, entry.galleryTitle, entry.file.id)
+  }
+
+  // Keep keyboard handler up to date with latest nav state
+  keyHandlerRef.current = (e: KeyboardEvent) => {
+    if (e.key === "ArrowLeft" && prevNav) navigateToEntry(prevNav)
+    if (e.key === "ArrowRight" && nextNav) navigateToEntry(nextNav)
   }
 
   const toggleGallery = (title: string) => {
