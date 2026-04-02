@@ -254,7 +254,7 @@ const AppContent: React.FC = () => {
           title={selectedUser ? "Go to home page" : undefined}
           onClick={selectedUser ? goHome : undefined}
         >
-          Media Thing
+          Media Thing{selectedUser && <span className="app-title-user">/{selectedUser}</span>}
         </h1>
       </header>
 
