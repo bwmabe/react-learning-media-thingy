@@ -84,6 +84,11 @@ body {
   cursor: pointer;
 }
 
+.app-title-user {
+  font-weight: 400;
+  color: var(--ctp-overlay0);
+}
+
 .app-title.clickable:hover {
   color: var(--ctp-text);
 }
