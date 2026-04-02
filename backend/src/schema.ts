@@ -9,7 +9,17 @@ export const typeDefs = `#graphql
     published: String
   }
 
+  type Thumb {
+    user: String!
+    filename: String!
+  }
+
   type Query {
     files(filter: String): [FileMetadata]
+    thumbs: [Thumb]
+  }
+
+  type Mutation {
+    setThumb(user: String!, filename: String!): Thumb
   }
 `

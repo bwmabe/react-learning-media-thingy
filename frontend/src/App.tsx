@@ -1,9 +1,9 @@
 import { gql } from "@apollo/client"
-import { useQuery } from "@apollo/client/react"
+import { useMutation, useQuery } from "@apollo/client/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom"
 
-import { File, GetFilesResult } from "./Interfaces"
+import { File, GetFilesResult, GetThumbsResult } from "./Interfaces"
 import "./App.css"
 
 const GET_FILES = gql`
@@ -14,6 +14,24 @@ const GET_FILES = gql`
       user
       filename
       published
+    }
+  }
+`
+
+const GET_THUMBS = gql`
+  query GetThumbs {
+    thumbs {
+      user
+      filename
+    }
+  }
+`
+
+const SET_THUMB = gql`
+  mutation SetThumb($user: String!, $filename: String!) {
+    setThumb(user: $user, filename: $filename) {
+      user
+      filename
     }
   }
 `
@@ -55,6 +73,11 @@ const AppContent: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { loading, data, error } = useQuery<GetFilesResult>(GET_FILES)
+  const { data: thumbsData } = useQuery<GetThumbsResult>(GET_THUMBS)
+  const [setThumb] = useMutation(SET_THUMB, {
+    refetchQueries: [{ query: GET_THUMBS }],
+  })
+  const thumbsDispatched = useRef<Set<string>>(new Set())
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -115,14 +138,32 @@ const AppContent: React.FC = () => {
     setSelectedFile(data.files.find(f => f.id === decodeURIComponent(fileIdParam)) ?? null)
   }, [fileIdParam, data])
 
+  const thumbsMap = useMemo(() =>
+    new Map((thumbsData?.thumbs ?? []).map(t => [t.user, t.filename]))
+  , [thumbsData])
+
   const userCards = useMemo(() => {
     const users = [...new Set(data?.files.map(f => f.user) ?? [])].sort((a, b) => a.localeCompare(b))
-    return users.map(user => {
-      const images = (data?.files ?? []).filter(f => f.user === user && isImage(f.filename))
-      const preview = images.length > 0 ? images[Math.floor(Math.random() * images.length)] : null
-      return { user, preview }
-    })
-  }, [data])
+    return users.map(user => ({
+      user,
+      preview: thumbsMap.get(user) ?? null,
+    }))
+  }, [data, thumbsMap])
+
+  // Store a thumbnail for any user that doesn't have one yet
+  useEffect(() => {
+    if (!data || !thumbsData) return
+    for (const { user } of userCards) {
+      if (!thumbsMap.has(user) && !thumbsDispatched.current.has(user)) {
+        const images = data.files.filter(f => f.user === user && isImage(f.filename))
+        if (images.length > 0) {
+          const pick = images[Math.floor(Math.random() * images.length)]
+          thumbsDispatched.current.add(user)
+          setThumb({ variables: { user, filename: pick.filename } })
+        }
+      }
+    }
+  }, [data, thumbsData, thumbsMap, userCards, setThumb])
 
   if (loading) return <div className="empty-state">Loading...</div>
   if (error) return <div className="empty-state">Error: {error.message}</div>

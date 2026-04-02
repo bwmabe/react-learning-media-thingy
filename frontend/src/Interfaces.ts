@@ -9,3 +9,12 @@ export interface File {
 export interface GetFilesResult {
   files: File[]
 }
+
+export interface Thumb {
+  user: string
+  filename: string
+}
+
+export interface GetThumbsResult {
+  thumbs: Thumb[]
+}

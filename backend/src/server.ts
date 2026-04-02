@@ -26,24 +26,37 @@ export async function createServer(dbPath?: string): Promise<{
   const httpServer = http.createServer(app)
   
   const db = new sqlite3.Database(dbPath || process.env.DATABASE_NAME || "./metadata.db")
-  
+
+  await new Promise<void>((resolve, reject) =>
+    db.run(
+      "CREATE TABLE IF NOT EXISTS thumbs (user TEXT PRIMARY KEY, filename TEXT NOT NULL)",
+      err => err ? reject(err) : resolve()
+    )
+  )
+
+  const dbAll = <T>(query: string, params: unknown[] = []): Promise<T[]> =>
+    new Promise((resolve, reject) =>
+      db.all(query, params, (err, rows) => err ? reject(err) : resolve(rows as T[]))
+    )
+
+  const dbRun = (query: string, params: unknown[] = []): Promise<void> =>
+    new Promise((resolve, reject) =>
+      db.run(query, params, err => err ? reject(err) : resolve())
+    )
+
   const resolvers = {
     Query: {
-      files: async (_parent: unknown, { filter }: { filter?: string }): Promise<FileMetadata[]> => {
-        return new Promise((resolve, reject) => {
-          const query = filter 
-            ? "SELECT * FROM items WHERE title LIKE ?" 
-            : "SELECT * FROM items"
-          const params = filter ? [`%${filter}%`] : []
-  
-          db.all(query, params, (err, rows: FileMetadata[]) => {
-            if (err) {
-              console.error(err)
-              reject(err)
-            }
-            resolve(rows)
-          })
-        })
+      files: (_parent: unknown, { filter }: { filter?: string }) =>
+        dbAll<FileMetadata>(
+          filter ? "SELECT * FROM items WHERE title LIKE ?" : "SELECT * FROM items",
+          filter ? [`%${filter}%`] : []
+        ),
+      thumbs: () => dbAll<{ user: string; filename: string }>("SELECT user, filename FROM thumbs"),
+    },
+    Mutation: {
+      setThumb: async (_parent: unknown, { user, filename }: { user: string; filename: string }) => {
+        await dbRun("INSERT OR REPLACE INTO thumbs (user, filename) VALUES (?, ?)", [user, filename])
+        return { user, filename }
       },
     },
   }
