@@ -305,7 +305,7 @@ const AppContent: React.FC = () => {
             {userCards.map(({ user, preview }) => (
               <div key={user} className="user-card" onClick={() => selectUser(user)}>
                 {preview && (
-                  <img className="user-card-img" src={getMediaUrl(preview.filename)} alt={user} />
+                  <img className="user-card-img" src={getMediaUrl(preview)} alt={user} />
                 )}
                 <div className="user-card-name">{user}</div>
               </div>
