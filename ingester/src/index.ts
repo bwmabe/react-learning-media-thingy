@@ -102,20 +102,47 @@ async function main() {
     | { filename: string; skip: true }
     | { filename: string; error: string }
 
+  async function resolveMediaFilename(derivedFilename: string): Promise<string> {
+    const mediaPath = path.join(searchDir, derivedFilename)
+    try {
+      await fs.access(mediaPath)
+      return derivedFilename
+    } catch {
+      // File not found — look for another file with the same stem in the same directory
+      const dir = path.dirname(derivedFilename)
+      const stem = path.basename(derivedFilename, path.extname(derivedFilename))
+      const entries = await fs.readdir(path.join(searchDir, dir))
+      const matches = entries.filter(e =>
+        path.basename(e, path.extname(e)) === stem &&
+        e !== path.basename(derivedFilename) &&
+        !e.endsWith(".json")
+      )
+      if (matches.length === 1) {
+        const corrected = path.join(dir === "." ? "" : dir, matches[0])
+        console.warn(`  Extension mismatch: ${derivedFilename} → ${corrected}`)
+        return corrected
+      }
+      throw new Error(`Media file not found: ${mediaPath}`)
+    }
+  }
+
   async function processFile(file: string): Promise<FileResult> {
-    const filename = file.replace(/\.json$/, "")
     const filePath = path.join(searchDir, file)
 
     try {
       const mtime = Math.floor((await fs.stat(filePath)).mtimeMs)
+      const derivedFilename = file.replace(/\.json$/, "")
 
-      if (existingMtimes.get(filename) === mtime) {
-        return { filename, skip: true }
+      // Use cached mtime check on the sidecar before doing heavier work
+      if (existingMtimes.get(derivedFilename) === mtime) {
+        return { filename: derivedFilename, skip: true }
       }
 
       const data = JSON.parse(await fs.readFile(filePath, "utf-8")) as Partial<MediaMetadata>
+      const filename = await resolveMediaFilename(derivedFilename)
       return { filename, mtime, data }
     } catch (err) {
+      const filename = file.replace(/\.json$/, "")
       if (!continueOnError) throw new Error(`Failed to process ${filePath}: ${(err as Error).message}`)
       return { filename, error: (err as Error).message }
     }
