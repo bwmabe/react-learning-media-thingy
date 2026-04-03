@@ -183,28 +183,28 @@ const AppContent: React.FC = () => {
     return acc
   }, {})
 
-  // Sort gallery entries within each gallery, then sort the galleries themselves
-  const galleries = Object.fromEntries(
-    Object.entries(galleriesRaw)
-      .map(([title, files]) => [
-        title,
-        [...files].sort((a, b) => {
-          const cmp = sort.by === "date" ? a.published.localeCompare(b.published) : a.filename.localeCompare(b.filename)
-          return sort.dir === "asc" ? cmp : -cmp
-        }),
-      ])
-      .sort(([aTitle, aFiles], [bTitle, bFiles]) => {
-        const cmp = sort.by === "date"
-          ? aFiles[0].published.localeCompare(bFiles[0].published)
-          : aTitle.localeCompare(bTitle)
+  // Sort gallery entries within each gallery, then sort the galleries themselves.
+  // Keep as an array of tuples — converting to a plain object would let JS re-sort
+  // numeric-looking keys (e.g. a gallery titled "2022"), breaking date order.
+  const galleries: [string, File[]][] = Object.entries(galleriesRaw)
+    .map(([title, files]): [string, File[]] => [
+      title,
+      [...files].sort((a, b) => {
+        const cmp = sort.by === "date" ? a.published.localeCompare(b.published) : a.filename.localeCompare(b.filename)
         return sort.dir === "asc" ? cmp : -cmp
-      })
-  )
+      }),
+    ])
+    .sort(([aTitle, aFiles], [bTitle, bFiles]) => {
+      const cmp = sort.by === "date"
+        ? aFiles[0].published.localeCompare(bFiles[0].published)
+        : aTitle.localeCompare(bTitle)
+      return sort.dir === "asc" ? cmp : -cmp
+    })
 
   // Build sidebar items, inserting year/month headers when sorting by date
   type SidebarItem =
     | { kind: "year"; label: string }
-    | { kind: "month"; label: string }
+    | { kind: "month"; key: string; label: string }
     | { kind: "gallery"; title: string; files: File[] }
 
   const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -212,7 +212,7 @@ const AppContent: React.FC = () => {
   const sidebarItems: SidebarItem[] = []
   if (sort.by === "date") {
     let lastYear = "", lastMonth = ""
-    for (const [title, files] of Object.entries(galleries)) {
+    for (const [title, files] of galleries) {
       const pub = files[0].published
       const year = pub.slice(0, 4)
       const month = pub.slice(0, 7)
@@ -222,19 +222,19 @@ const AppContent: React.FC = () => {
         lastMonth = ""
       }
       if (month !== lastMonth) {
-        sidebarItems.push({ kind: "month", label: MONTHS[parseInt(pub.slice(5, 7), 10) - 1] })
+        sidebarItems.push({ kind: "month", key: month, label: MONTHS[parseInt(pub.slice(5, 7), 10) - 1] })
         lastMonth = month
       }
       sidebarItems.push({ kind: "gallery", title, files })
     }
   } else {
-    for (const [title, files] of Object.entries(galleries)) {
+    for (const [title, files] of galleries) {
       sidebarItems.push({ kind: "gallery", title, files })
     }
   }
 
   // Flat ordered list of all files across galleries for prev/next navigation
-  const fileNav = Object.entries(galleries).flatMap(([galleryTitle, files]) =>
+  const fileNav = galleries.flatMap(([galleryTitle, files]) =>
     files.map((file, i) => ({
       file,
       galleryTitle,
@@ -339,7 +339,7 @@ const AppContent: React.FC = () => {
             <div className="sidebar-list">
               {sidebarItems.map(item => {
                 if (item.kind === "year") return <div key={`year-${item.label}`} className="sidebar-date-year">{item.label}</div>
-                if (item.kind === "month") return <div key={`month-${item.label}`} className="sidebar-date-month">{item.label}</div>
+                if (item.kind === "month") return <div key={`month-${item.key}`} className="sidebar-date-month">{item.label}</div>
                 const { title, files } = item
                 const expanded = expandedGalleries.has(title)
                 return (
