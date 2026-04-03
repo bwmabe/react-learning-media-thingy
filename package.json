@@ -7,7 +7,7 @@
     "dev": "concurrently \"DATABASE_NAME=${DATABASE_NAME:-$(pwd)/test-data/test.db} MEDIA_PATH=${MEDIA_PATH:-$(pwd)/test-data/media} THUMB_PATH=${THUMB_PATH:-$(pwd)/thumbnails} npm run dev --prefix backend\" \"npm start --prefix frontend\"",
     "build": "npm run build --prefix frontend && npm run build --prefix backend",
     "start": "node backend/dist/server.js",
-    "ingest": "npm run ingest --prefix ingester --",
+    "ingest": "ts-node -P ingester/tsconfig.json ingester/src/index.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
