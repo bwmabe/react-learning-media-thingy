@@ -255,7 +255,7 @@ const AppContent: React.FC = () => {
     new Map(fileNav.map((entry, i) => [entry.file.id, i]))
   , [fileNav])
 
-  if (loading) return <div className="empty-state">Loading...</div>
+  if (loading) return <div className="empty-state"><div className="throbber" /></div>
   if (error) return <div className="empty-state">Error: {error.message}</div>
 
   const currentNavIndex = selectedFile ? (fileNavMap.get(selectedFile.id) ?? -1) : -1
