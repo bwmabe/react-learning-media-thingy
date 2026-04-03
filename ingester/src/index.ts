@@ -4,6 +4,7 @@ import sqlite3 from "sqlite3"
 import { open } from "sqlite"
 import fs from "fs/promises"
 import path from "path"
+import sharp from "sharp"
 
 interface MediaMetadata {
   id: string;
@@ -20,10 +21,11 @@ async function main() {
     .argument("<path_to_db>", "The path to the SQLite database file.")
     .option("--reset", "Delete the existing database before ingesting.")
     .option("--continue-on-error", "Skip invalid files instead of crashing; report them at the end.")
+    .option("--thumb-dir <path>", "Directory to write generated thumbnails into.")
     .parse(process.argv)
 
   const [searchDir, dbPath] = program.args
-  const { reset, continueOnError } = program.opts<{ reset: boolean; continueOnError: boolean }>()
+  const { reset, continueOnError, thumbDir } = program.opts<{ reset: boolean; continueOnError: boolean; thumbDir?: string }>()
 
   if (reset) {
     try {
@@ -102,6 +104,21 @@ async function main() {
     | { filename: string; skip: true }
     | { filename: string; error: string }
 
+  const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".tiff", ".tif", ".bmp", ".avif"])
+  const isImage = (filename: string) => IMAGE_EXTS.has(path.extname(filename).toLowerCase())
+
+  async function generateThumb(filename: string): Promise<void> {
+    if (!thumbDir || !isImage(filename)) return
+    const src = path.resolve(searchDir, filename)
+    const dest = path.resolve(thumbDir, filename.replace(/\.[^.]+$/, ".jpg"))
+    try {
+      await fs.access(dest)
+      return // already exists
+    } catch { /* not cached yet */ }
+    await fs.mkdir(path.dirname(dest), { recursive: true })
+    await sharp(src).resize(400, 400, { fit: "cover" }).jpeg({ quality: 80 }).toFile(dest)
+  }
+
   async function resolveMediaFilename(derivedFilename: string): Promise<string> {
     const mediaPath = path.join(searchDir, derivedFilename)
     try {
@@ -179,6 +196,10 @@ async function main() {
 
         if (existingMtimes.has(filename)) updated++
         else added++
+
+        await generateThumb(filename).catch(err =>
+          console.warn(`  Thumbnail failed for ${filename}: ${(err as Error).message}`)
+        )
       }
     }
     await db.run("COMMIT")
