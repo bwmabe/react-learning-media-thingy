@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client"
 import { useMutation, useQuery } from "@apollo/client/react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom"
 
 import { File, GetFilesResult, GetThumbsResult } from "./Interfaces"
@@ -95,14 +95,23 @@ const AppContent: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [fullscreen, setFullscreen] = useState(false)
   const [fsUiVisible, setFsUiVisible] = useState(false)
-  const swipeTouchStartX = useRef<number | null>(null)
   const keyHandlerRef = useRef<((e: KeyboardEvent) => void) | null>(null)
+  const fsTrackRef = useRef<HTMLDivElement>(null)
+  const fsDragStartX = useRef<number | null>(null)
+  const fsDragged = useRef(false)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => keyHandlerRef.current?.(e)
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [])
+
+  // Reset carousel track to centre position before each paint so there's no flash
+  useLayoutEffect(() => {
+    if (!fsTrackRef.current) return
+    fsTrackRef.current.style.transition = "none"
+    fsTrackRef.current.style.transform = "translateX(-100vw)"
+  }, [selectedFile])
 
   // Derive sort from ?sort=by-dir query param; default is alpha-asc
   const sortParam = searchParams.get("sort") ?? "alpha-asc"
@@ -291,6 +300,73 @@ const AppContent: React.FC = () => {
     navigate("/")
   }
 
+  // --- Fullscreen carousel ---
+
+  const handleFsTouchStart = (e: React.TouchEvent) => {
+    fsDragStartX.current = e.touches[0].clientX
+    fsDragged.current = false
+    if (fsTrackRef.current) fsTrackRef.current.style.transition = "none"
+  }
+
+  const handleFsTouchMove = (e: React.TouchEvent) => {
+    if (fsDragStartX.current === null || !fsTrackRef.current) return
+    const delta = e.touches[0].clientX - fsDragStartX.current
+    if (Math.abs(delta) > 5) fsDragged.current = true
+    // Rubber-band at boundaries
+    const d = (!prevNav && delta > 0) || (!nextNav && delta < 0) ? delta * 0.25 : delta
+    fsTrackRef.current.style.transform = `translateX(calc(-100vw + ${d}px))`
+  }
+
+  const handleFsTouchEnd = (e: React.TouchEvent) => {
+    if (fsDragStartX.current === null || !fsTrackRef.current) return
+    const delta = e.changedTouches[0].clientX - fsDragStartX.current
+    fsDragStartX.current = null
+    const track = fsTrackRef.current
+    const threshold = window.innerWidth / 3
+
+    if (delta < -threshold && nextNav) {
+      track.style.transition = "transform 0.25s ease"
+      track.style.transform = "translateX(-200vw)"
+      track.addEventListener("transitionend", () => navigateToEntry(nextNav), { once: true })
+    } else if (delta > threshold && prevNav) {
+      track.style.transition = "transform 0.25s ease"
+      track.style.transform = "translateX(0vw)"
+      track.addEventListener("transitionend", () => navigateToEntry(prevNav), { once: true })
+    } else {
+      track.style.transition = "transform 0.25s ease"
+      track.style.transform = "translateX(-100vw)"
+    }
+  }
+
+  const renderFsSlide = (file: File, isCurrent: boolean) => {
+    if (isVideo(file.filename)) {
+      if (isCurrent) {
+        return (
+          <video key={file.id} className="fs-video" controls autoPlay playsInline
+            onClick={e => e.stopPropagation()}>
+            <source src={getMediaUrl(file.filename)} type={videoMimeType(file.filename)} />
+          </video>
+        )
+      }
+      return (
+        <div className="fs-video-preview">
+          <span className="fs-video-preview-icon">▶</span>
+        </div>
+      )
+    }
+    if (isImage(file.filename)) {
+      return (
+        <img
+          className={isCurrent ? "fs-image" : "fs-adjacent-image"}
+          src={isCurrent ? getMediaUrl(file.filename) : getThumbUrl(file.filename)}
+          alt={file.title}
+          onClick={isCurrent ? (e => { e.stopPropagation(); setFsUiVisible(v => !v) }) : undefined}
+        />
+      )
+    }
+    return null
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -430,37 +506,25 @@ const AppContent: React.FC = () => {
       {fullscreen && selectedFile && (
         <div
           className="fs-overlay"
-          onClick={() => setFullscreen(false)}
-          onTouchStart={e => { swipeTouchStartX.current = e.touches[0].clientX }}
-          onTouchEnd={e => {
-            if (swipeTouchStartX.current === null) return
-            const delta = e.changedTouches[0].clientX - swipeTouchStartX.current
-            swipeTouchStartX.current = null
-            if (delta > 50 && prevNav) navigateToEntry(prevNav)
-            else if (delta < -50 && nextNav) navigateToEntry(nextNav)
-          }}
+          onClick={() => { if (!fsDragged.current) setFullscreen(false) }}
+          onTouchStart={handleFsTouchStart}
+          onTouchMove={handleFsTouchMove}
+          onTouchEnd={handleFsTouchEnd}
         >
-          {isImage(selectedFile.filename) ? (
-            <img
-              className="fs-image"
-              src={getMediaUrl(selectedFile.filename)}
-              alt={selectedFile.title}
-              onClick={e => { e.stopPropagation(); setFsUiVisible(v => !v) }}
-            />
-          ) : isVideo(selectedFile.filename) ? (
-            <video
-              key={selectedFile.id}
-              className="fs-video"
-              controls
-              autoPlay
-              playsInline
-              onClick={e => e.stopPropagation()}
-            >
-              <source src={getMediaUrl(selectedFile.filename)} type={videoMimeType(selectedFile.filename)} />
-            </video>
-          ) : null}
+          <div className="fs-track" ref={fsTrackRef}>
+            <div className="fs-slide" onClick={e => { e.stopPropagation(); if (prevNav) navigateToEntry(prevNav) }}>
+              {prevNav && renderFsSlide(prevNav.file, false)}
+            </div>
+            <div className="fs-slide">
+              {renderFsSlide(selectedFile, true)}
+            </div>
+            <div className="fs-slide" onClick={e => { e.stopPropagation(); if (nextNav) navigateToEntry(nextNav) }}>
+              {nextNav && renderFsSlide(nextNav.file, false)}
+            </div>
+          </div>
 
-          {/* UI chrome: always visible for video, tap-to-show for images */}
+          {/* Close is always visible; nav + info show on tap (or always for video) */}
+          <button className="fs-close" onClick={e => { e.stopPropagation(); setFullscreen(false) }}>×</button>
           {(fsUiVisible || isVideo(selectedFile.filename)) && (
             <>
               {prevNav && (
@@ -479,7 +543,6 @@ const AppContent: React.FC = () => {
                   {nextIsGalleryJump ? "»" : "›"}
                 </button>
               )}
-              <button className="fs-close" onClick={() => setFullscreen(false)}>×</button>
               <div className="fs-info" onClick={e => e.stopPropagation()}>
                 <div className="fs-info-gallery">{fileTitle(selectedFile)}</div>
                 <div className="fs-info-file">{selectedFile.filename.split("/").pop()}</div>
