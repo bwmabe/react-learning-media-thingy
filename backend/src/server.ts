@@ -47,11 +47,17 @@ export async function createServer(dbPath?: string): Promise<{
 
   const resolvers = {
     Query: {
-      files: (_parent: unknown, { filter }: { filter?: string }) =>
-        dbAll<FileMetadata>(
-          filter ? "SELECT * FROM items WHERE title LIKE ?" : "SELECT * FROM items",
-          filter ? [`%${filter}%`] : []
-        ),
+      users: () =>
+        dbAll<{ user: string }>("SELECT DISTINCT user FROM items ORDER BY user")
+          .then(rows => rows.map(r => r.user)),
+      files: (_parent: unknown, { filter, user }: { filter?: string; user?: string }) => {
+        const conditions: string[] = []
+        const params: string[] = []
+        if (filter) { conditions.push("title LIKE ?"); params.push(`%${filter}%`) }
+        if (user) { conditions.push("user = ?"); params.push(user) }
+        const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : ""
+        return dbAll<FileMetadata>(`SELECT * FROM items ${where}`, params)
+      },
       thumbs: () => dbAll<{ user: string; filename: string }>("SELECT user, filename FROM thumbs"),
     },
     Mutation: {

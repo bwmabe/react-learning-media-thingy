@@ -10,6 +10,10 @@ export interface GetFilesResult {
   files: File[]
 }
 
+export interface GetUsersResult {
+  users: string[]
+}
+
 export interface Thumb {
   user: string
   filename: string

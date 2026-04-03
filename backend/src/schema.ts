@@ -15,7 +15,8 @@ export const typeDefs = `#graphql
   }
 
   type Query {
-    files(filter: String): [FileMetadata]
+    users: [String]
+    files(filter: String, user: String): [FileMetadata]
     thumbs: [Thumb]
   }
 

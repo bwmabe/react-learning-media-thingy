@@ -3,12 +3,18 @@ import { useMutation, useQuery } from "@apollo/client/react"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom"
 
-import { File, GetFilesResult, GetThumbsResult } from "./Interfaces"
+import { File, GetFilesResult, GetThumbsResult, GetUsersResult } from "./Interfaces"
 import "./App.css"
 
+const GET_USERS = gql`
+  query GetUsers {
+    users
+  }
+`
+
 const GET_FILES = gql`
-  query GetFiles($filter: String) {
-    files(filter: $filter) {
+  query GetFiles($user: String!) {
+    files(user: $user) {
       id
       title
       user
@@ -84,7 +90,11 @@ const AppContent: React.FC = () => {
   }>()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { loading, data, error } = useQuery<GetFilesResult>(GET_FILES)
+  const { loading: usersLoading, data: usersData, error } = useQuery<GetUsersResult>(GET_USERS)
+  const { loading: filesLoading, data } = useQuery<GetFilesResult>(GET_FILES, {
+    variables: { user: selectedUser },
+    skip: !selectedUser,
+  })
   const { data: thumbsData } = useQuery<GetThumbsResult>(GET_THUMBS)
   const [setThumb] = useMutation(SET_THUMB, {
     refetchQueries: [{ query: GET_THUMBS }],
@@ -163,13 +173,12 @@ const AppContent: React.FC = () => {
     new Map((thumbsData?.thumbs ?? []).map(t => [t.user, t.filename]))
   , [thumbsData])
 
-  const userCards = useMemo(() => {
-    const users = [...new Set(data?.files.map(f => f.user) ?? [])].sort((a, b) => a.localeCompare(b))
-    return users.map(user => ({
+  const userCards = useMemo(() =>
+    (usersData?.users ?? []).map(user => ({
       user,
       preview: thumbsMap.get(user) ?? null,
     }))
-  }, [data, thumbsMap])
+  , [usersData, thumbsMap])
 
   // Store a thumbnail for any user that doesn't have one yet
   useEffect(() => {
@@ -255,7 +264,7 @@ const AppContent: React.FC = () => {
     new Map(fileNav.map((entry, i) => [entry.file.id, i]))
   , [fileNav])
 
-  if (loading) return <div className="app"><div className="empty-state"><div className="throbber" /></div></div>
+  if (usersLoading) return <div className="app"><div className="empty-state"><div className="throbber" /></div></div>
   if (error) return <div className="app"><div className="empty-state">Error: {error.message}</div></div>
 
   const currentNavIndex = selectedFile ? (fileNavMap.get(selectedFile.id) ?? -1) : -1
@@ -464,7 +473,9 @@ const AppContent: React.FC = () => {
           </nav>}
 
           <main className="main">
-            {selectedFile ? (
+            {filesLoading ? (
+              <div className="empty-state"><div className="throbber" /></div>
+            ) : selectedFile ? (
               <>
                 <h2 className="media-title">{fileTitle(selectedFile)}</h2>
                 <div className="media-player">
