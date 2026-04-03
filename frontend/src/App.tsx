@@ -46,17 +46,23 @@ const isImage = (filename: string) => {
   return ext ? ["jpg", "jpeg", "png", "gif", "webp", "avif"].includes(ext) : false
 }
 
-const backendHost = () =>
-  import.meta.env.VITE_GRAPHQL_URI?.split("/graphql")[0] ?? "http://localhost:4000"
+const BACKEND_HOST = import.meta.env.VITE_GRAPHQL_URI?.split("/graphql")[0] ?? "http://localhost:4000"
+
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+
+type SidebarItem =
+  | { kind: "year"; label: string }
+  | { kind: "month"; key: string; label: string }
+  | { kind: "gallery"; title: string; files: File[] }
 
 const encodePath = (filename: string) =>
   filename.split("/").map(encodeURIComponent).join("/")
 
 const getMediaUrl = (filename: string) =>
-  `${backendHost()}/static/${encodePath(filename)}`
+  `${BACKEND_HOST}/static/${encodePath(filename)}`
 
 const getThumbUrl = (filename: string) =>
-  `${backendHost()}/thumb/${encodePath(filename)}`
+  `${BACKEND_HOST}/thumb/${encodePath(filename)}`
 
 const videoMimeType = (filename: string) =>
   filename.endsWith(".mov") ? "video/quicktime" : "video/mp4"
@@ -171,79 +177,79 @@ const AppContent: React.FC = () => {
     }
   }, [data, thumbsData, thumbsMap, userCards, setThumb])
 
+  const userFiles = useMemo(() =>
+    (data?.files ?? []).filter(f => f.user === selectedUser)
+  , [data, selectedUser])
+
+  const galleries = useMemo((): [string, File[]][] => {
+    const raw = userFiles.reduce<Record<string, File[]>>((acc, file) => {
+      const key = fileTitle(file)
+      if (!acc[key]) acc[key] = []
+      acc[key].push(file)
+      return acc
+    }, {})
+    return Object.entries(raw)
+      .map(([title, files]): [string, File[]] => [
+        title,
+        [...files].sort((a, b) => {
+          const cmp = sortBy === "date" ? a.published.localeCompare(b.published) : a.filename.localeCompare(b.filename)
+          return sortDir === "asc" ? cmp : -cmp
+        }),
+      ])
+      .sort(([aTitle, aFiles], [bTitle, bFiles]) => {
+        const cmp = sortBy === "date"
+          ? aFiles[0].published.localeCompare(bFiles[0].published)
+          : aTitle.localeCompare(bTitle)
+        return sortDir === "asc" ? cmp : -cmp
+      })
+  }, [userFiles, sortBy, sortDir])
+
+  const sidebarItems = useMemo((): SidebarItem[] => {
+    const items: SidebarItem[] = []
+    if (sortBy === "date") {
+      let lastYear = "", lastMonth = ""
+      for (const [title, files] of galleries) {
+        const pub = files[0].published
+        const year = pub.slice(0, 4)
+        const month = pub.slice(0, 7)
+        if (year !== lastYear) {
+          items.push({ kind: "year", label: year })
+          lastYear = year
+          lastMonth = ""
+        }
+        if (month !== lastMonth) {
+          items.push({ kind: "month", key: month, label: MONTHS[parseInt(pub.slice(5, 7), 10) - 1] })
+          lastMonth = month
+        }
+        items.push({ kind: "gallery", title, files })
+      }
+    } else {
+      for (const [title, files] of galleries) {
+        items.push({ kind: "gallery", title, files })
+      }
+    }
+    return items
+  }, [galleries, sortBy])
+
+  const fileNav = useMemo(() =>
+    galleries.flatMap(([galleryTitle, files]) =>
+      files.map((file, i) => ({
+        file,
+        galleryTitle,
+        isFirstInGallery: i === 0,
+        isLastInGallery: i === files.length - 1,
+      }))
+    )
+  , [galleries])
+
+  const fileNavMap = useMemo(() =>
+    new Map(fileNav.map((entry, i) => [entry.file.id, i]))
+  , [fileNav])
+
   if (loading) return <div className="empty-state">Loading...</div>
   if (error) return <div className="empty-state">Error: {error.message}</div>
 
-  const userFiles = (data?.files ?? []).filter(f => f.user === selectedUser)
-
-  const galleriesRaw = userFiles.reduce<Record<string, File[]>>((acc, file) => {
-    const key = fileTitle(file)
-    if (!acc[key]) acc[key] = []
-    acc[key].push(file)
-    return acc
-  }, {})
-
-  // Sort gallery entries within each gallery, then sort the galleries themselves.
-  // Keep as an array of tuples — converting to a plain object would let JS re-sort
-  // numeric-looking keys (e.g. a gallery titled "2022"), breaking date order.
-  const galleries: [string, File[]][] = Object.entries(galleriesRaw)
-    .map(([title, files]): [string, File[]] => [
-      title,
-      [...files].sort((a, b) => {
-        const cmp = sort.by === "date" ? a.published.localeCompare(b.published) : a.filename.localeCompare(b.filename)
-        return sort.dir === "asc" ? cmp : -cmp
-      }),
-    ])
-    .sort(([aTitle, aFiles], [bTitle, bFiles]) => {
-      const cmp = sort.by === "date"
-        ? aFiles[0].published.localeCompare(bFiles[0].published)
-        : aTitle.localeCompare(bTitle)
-      return sort.dir === "asc" ? cmp : -cmp
-    })
-
-  // Build sidebar items, inserting year/month headers when sorting by date
-  type SidebarItem =
-    | { kind: "year"; label: string }
-    | { kind: "month"; key: string; label: string }
-    | { kind: "gallery"; title: string; files: File[] }
-
-  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"]
-
-  const sidebarItems: SidebarItem[] = []
-  if (sort.by === "date") {
-    let lastYear = "", lastMonth = ""
-    for (const [title, files] of galleries) {
-      const pub = files[0].published
-      const year = pub.slice(0, 4)
-      const month = pub.slice(0, 7)
-      if (year !== lastYear) {
-        sidebarItems.push({ kind: "year", label: year })
-        lastYear = year
-        lastMonth = ""
-      }
-      if (month !== lastMonth) {
-        sidebarItems.push({ kind: "month", key: month, label: MONTHS[parseInt(pub.slice(5, 7), 10) - 1] })
-        lastMonth = month
-      }
-      sidebarItems.push({ kind: "gallery", title, files })
-    }
-  } else {
-    for (const [title, files] of galleries) {
-      sidebarItems.push({ kind: "gallery", title, files })
-    }
-  }
-
-  // Flat ordered list of all files across galleries for prev/next navigation
-  const fileNav = galleries.flatMap(([galleryTitle, files]) =>
-    files.map((file, i) => ({
-      file,
-      galleryTitle,
-      isFirstInGallery: i === 0,
-      isLastInGallery: i === files.length - 1,
-    }))
-  )
-
-  const currentNavIndex = fileNav.findIndex(e => e.file.id === selectedFile?.id)
+  const currentNavIndex = selectedFile ? (fileNavMap.get(selectedFile.id) ?? -1) : -1
   const currentNav = fileNav[currentNavIndex]
   const prevNav = currentNavIndex > 0 ? fileNav[currentNavIndex - 1] : null
   const nextNav = currentNavIndex < fileNav.length - 1 ? fileNav[currentNavIndex + 1] : null
