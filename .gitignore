@@ -3,3 +3,4 @@ dist/
 test_metadata.db
 /ingester/test/test.db
 *.log
+thumbnails/
