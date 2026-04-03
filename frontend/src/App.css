@@ -247,6 +247,10 @@ body {
   color: var(--ctp-mauve);
   border-top: 1px solid var(--ctp-surface0);
   margin-top: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--ctp-mantle);
 }
 
 .sidebar-date-year:first-child {
@@ -259,6 +263,10 @@ body {
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--ctp-overlay0);
+  position: sticky;
+  top: 31px; /* sits below the stuck year header */
+  z-index: 2;
+  background: var(--ctp-mantle);
 }
 
 /* Gallery tree */
@@ -267,6 +275,10 @@ body {
   cursor: pointer;
   color: var(--ctp-subtext1);
   font-size: 0.9rem;
+  position: sticky;
+  top: 0; /* alpha sort: no date headers above */
+  z-index: 1;
+  background: var(--ctp-mantle);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -297,6 +309,11 @@ body {
 
 .gallery-toggle.expanded {
   transform: rotate(90deg);
+}
+
+/* In date sort, gallery headers must clear the stuck year + month headers above */
+.sidebar-list--date .gallery-header {
+  top: 55px; /* year (31px) + month (24px) */
 }
 
 .gallery-file {

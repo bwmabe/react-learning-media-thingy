@@ -336,7 +336,7 @@ const AppContent: React.FC = () => {
                 >Date {sort.by === "date" && (sort.dir === "asc" ? "↑" : "↓")}</button>
               </div>
             </div>
-            <div className="sidebar-list">
+            <div className={`sidebar-list${sort.by === "date" ? " sidebar-list--date" : ""}`}>
               {sidebarItems.map(item => {
                 if (item.kind === "year") return <div key={`year-${item.label}`} className="sidebar-date-year">{item.label}</div>
                 if (item.kind === "month") return <div key={`month-${item.key}`} className="sidebar-date-month">{item.label}</div>
