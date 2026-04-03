@@ -266,17 +266,15 @@ const AppContent: React.FC = () => {
   }
 
   const toggleGallery = (title: string) => {
-    setExpandedGalleries(prev => {
-      const next = new Set(prev)
-      if (next.has(title)) {
-        next.delete(title)
-        navigate(`/${encodeURIComponent(selectedUser!)}${sortSearch}`)
-      } else {
-        next.add(title)
-        navigate(`/${encodeURIComponent(selectedUser!)}/${encodeURIComponent(title)}${sortSearch}`)
-      }
-      return next
-    })
+    const next = new Set(expandedGalleries)
+    if (next.has(title)) {
+      next.delete(title)
+      navigate(`/${encodeURIComponent(selectedUser!)}${sortSearch}`)
+    } else {
+      next.add(title)
+      navigate(`/${encodeURIComponent(selectedUser!)}/${encodeURIComponent(title)}${sortSearch}`)
+    }
+    setExpandedGalleries(next)
   }
 
   const selectUser = (user: string) => {
