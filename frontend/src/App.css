@@ -275,9 +275,6 @@ body {
   cursor: pointer;
   color: var(--ctp-subtext1);
   font-size: 0.9rem;
-  position: sticky;
-  top: 0; /* alpha sort: no date headers above */
-  z-index: 1;
   background: var(--ctp-mantle);
   display: flex;
   align-items: center;
@@ -311,8 +308,14 @@ body {
   transform: rotate(90deg);
 }
 
-/* In date sort, gallery headers must clear the stuck year + month headers above */
-.sidebar-list--date .gallery-header {
+/* Sticky only applies to expanded gallery headers — collapsed ones can't scroll off screen */
+.gallery-header--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.sidebar-list--date .gallery-header--sticky {
   top: 55px; /* year (31px) + month (24px) */
 }
 

@@ -442,7 +442,7 @@ const AppContent: React.FC = () => {
                       </div>
                     ) : (
                       <>
-                        <div className="gallery-header" onClick={() => toggleGallery(title)}>
+                        <div className={`gallery-header${expanded ? " gallery-header--sticky" : ""}`} onClick={() => toggleGallery(title)}>
                           <span className={`gallery-toggle${expanded ? " expanded" : ""}`}>▶</span>
                           {title}
                         </div>
@@ -476,6 +476,7 @@ const AppContent: React.FC = () => {
                     <img
                       src={getMediaUrl(selectedFile.filename)}
                       alt={selectedFile.title}
+                      decoding="async"
                       onClick={() => { setFullscreen(true); setFsUiVisible(false) }}
                     />
                   ) : null}
