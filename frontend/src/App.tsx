@@ -305,7 +305,10 @@ const AppContent: React.FC = () => {
   const handleFsTouchStart = (e: React.TouchEvent) => {
     fsDragStartX.current = e.touches[0].clientX
     fsDragged.current = false
-    if (fsTrackRef.current) fsTrackRef.current.style.transition = "none"
+    if (fsTrackRef.current) {
+      fsTrackRef.current.style.willChange = "transform"
+      fsTrackRef.current.style.transition = "none"
+    }
   }
 
   const handleFsTouchMove = (e: React.TouchEvent) => {
@@ -324,17 +327,20 @@ const AppContent: React.FC = () => {
     const track = fsTrackRef.current
     const threshold = window.innerWidth / 3
 
+    const release = () => { track.style.willChange = "" }
+
     if (delta < -threshold && nextNav) {
       track.style.transition = "transform 0.25s ease"
       track.style.transform = "translateX(-200vw)"
-      track.addEventListener("transitionend", () => navigateToEntry(nextNav), { once: true })
+      track.addEventListener("transitionend", () => { release(); navigateToEntry(nextNav) }, { once: true })
     } else if (delta > threshold && prevNav) {
       track.style.transition = "transform 0.25s ease"
       track.style.transform = "translateX(0vw)"
-      track.addEventListener("transitionend", () => navigateToEntry(prevNav), { once: true })
+      track.addEventListener("transitionend", () => { release(); navigateToEntry(prevNav) }, { once: true })
     } else {
       track.style.transition = "transform 0.25s ease"
       track.style.transform = "translateX(-100vw)"
+      track.addEventListener("transitionend", release, { once: true })
     }
   }
 
@@ -360,6 +366,7 @@ const AppContent: React.FC = () => {
           className={isCurrent ? "fs-image" : "fs-adjacent-image"}
           src={isCurrent ? getMediaUrl(file.filename) : getThumbUrl(file.filename)}
           alt={file.title}
+          decoding="async"
           onClick={isCurrent ? (e => { e.stopPropagation(); setFsUiVisible(v => !v) }) : undefined}
         />
       )

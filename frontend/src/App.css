@@ -390,7 +390,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(17, 17, 27, 0.95);
+  background: var(--ctp-crust);
   overflow: hidden;
   touch-action: none;
 }
@@ -400,7 +400,6 @@ body {
   width: 300vw;
   height: 100%;
   transform: translateX(-100vw);
-  will-change: transform;
 }
 
 .fs-slide {
