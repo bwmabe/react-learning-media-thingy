@@ -348,7 +348,7 @@ const AppContent: React.FC = () => {
     if (isVideo(file.filename)) {
       if (isCurrent) {
         return (
-          <video key={file.id} className="fs-video" controls autoPlay playsInline
+          <video key={file.id} className="fs-video" controls autoPlay playsInline preload="metadata"
             onClick={e => e.stopPropagation()}>
             <source src={getMediaUrl(file.filename)} type={videoMimeType(file.filename)} />
           </video>
@@ -469,7 +469,7 @@ const AppContent: React.FC = () => {
                 <h2 className="media-title">{fileTitle(selectedFile)}</h2>
                 <div className="media-player">
                   {isVideo(selectedFile.filename) ? (
-                    <video key={selectedFile.id} controls playsInline>
+                    <video key={selectedFile.id} controls playsInline preload="metadata">
                       <source src={getMediaUrl(selectedFile.filename)} type={videoMimeType(selectedFile.filename)} />
                     </video>
                   ) : isImage(selectedFile.filename) ? (
