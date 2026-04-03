@@ -44,7 +44,7 @@ VITE_GRAPHQL_URI=http://localhost:4000/graphql
 ### Ingest test data
 
 ```bash
-npm run ingest -- test-data/media test-data/test.db
+npm run ingest -- test-data/media test-data/test.db --thumb-dir thumbnails
 ```
 
 ### Run the dev server
@@ -91,20 +91,20 @@ These four fields must be present. Any other fields in the sidecar are ignored. 
 
 ### 3. Ingest your data
 
-Run the ingester, passing your media root and a path for the database file:
+Run the ingester, passing your media root, a path for the database file, and a directory to write thumbnails into:
 
 ```bash
-npm run ingest -- /mnt/media /srv/media-thing/data.db
+npm run ingest -- /mnt/media /srv/media-thing/data.db --thumb-dir /srv/media-thing/thumbnails
 ```
 
-Use absolute paths. The ingester stores filenames relative to the media root you provide — **`MEDIA_PATH` must point to the same directory** when you run the server.
+Use absolute paths. The ingester stores filenames relative to the media root you provide — **`MEDIA_PATH` must point to the same directory** when you run the server. Likewise, **`THUMB_PATH` must match `--thumb-dir`** or thumbnails will 404.
 
-> **Warning:** The ingester drops and recreates the database every run. Running it again wipes all previous data.
+The ingester is incremental — re-running it only processes new or modified files, and skips thumbnails that already exist. Pass `--reset` to wipe the database and start fresh.
 
 ### 4. Run the server
 
 ```bash
-DATABASE_NAME=/srv/media-thing/data.db MEDIA_PATH=/mnt/media npm run dev
+DATABASE_NAME=/srv/media-thing/data.db MEDIA_PATH=/mnt/media THUMB_PATH=/srv/media-thing/thumbnails npm run dev
 ```
 
 The frontend is at http://localhost:3000. From other machines on the network, use the server's IP address instead of `localhost`.
