@@ -46,11 +46,17 @@ const isImage = (filename: string) => {
   return ext ? ["jpg", "jpeg", "png", "gif", "webp", "avif"].includes(ext) : false
 }
 
-const getMediaUrl = (filename: string) => {
-  const backendHost = import.meta.env.VITE_GRAPHQL_URI?.split("/graphql")[0] ?? "http://localhost:4000"
-  const encodedPath = filename.split("/").map(encodeURIComponent).join("/")
-  return `${backendHost}/static/${encodedPath}`
-}
+const backendHost = () =>
+  import.meta.env.VITE_GRAPHQL_URI?.split("/graphql")[0] ?? "http://localhost:4000"
+
+const encodePath = (filename: string) =>
+  filename.split("/").map(encodeURIComponent).join("/")
+
+const getMediaUrl = (filename: string) =>
+  `${backendHost()}/static/${encodePath(filename)}`
+
+const getThumbUrl = (filename: string) =>
+  `${backendHost()}/thumb/${encodePath(filename)}`
 
 const videoMimeType = (filename: string) =>
   filename.endsWith(".mov") ? "video/quicktime" : "video/mp4"
@@ -305,7 +311,7 @@ const AppContent: React.FC = () => {
             {userCards.map(({ user, preview }) => (
               <div key={user} className="user-card" onClick={() => selectUser(user)}>
                 {preview && (
-                  <img className="user-card-img" src={getMediaUrl(preview)} alt={user} />
+                  <img className="user-card-img" src={getThumbUrl(preview)} alt={user} />
                 )}
                 <div className="user-card-name">{user}</div>
               </div>

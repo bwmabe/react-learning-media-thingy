@@ -4,7 +4,9 @@ import express from "express"
 import http from "http"
 import cors from "cors"
 import path from "path"
+import fs from "fs"
 import sqlite3 from "sqlite3"
+import sharp from "sharp"
 import { typeDefs } from "./schema"
 
 interface FileMetadata {
@@ -70,7 +72,38 @@ export async function createServer(dbPath?: string): Promise<{
   await server.start()
 
   const mediaPath = process.env.MEDIA_PATH || path.resolve(__dirname, "../../test-data/media")
+  const thumbPath = process.env.THUMB_PATH || path.resolve(__dirname, "../../thumbnails")
   app.use("/static", express.static(mediaPath))
+
+  app.get("/thumb/*", async (req, res) => {
+    const relPath = req.path.slice("/thumb/".length)
+    const mediaFile = path.resolve(mediaPath, relPath)
+    const cacheFile = path.resolve(thumbPath, relPath.replace(/\.[^.]+$/, ".jpg"))
+
+    // Guard against path traversal
+    if (!mediaFile.startsWith(mediaPath + path.sep) && mediaFile !== mediaPath) {
+      return res.status(400).send("Invalid path")
+    }
+
+    if (fs.existsSync(cacheFile)) {
+      res.setHeader("Content-Type", "image/jpeg")
+      return res.sendFile(cacheFile)
+    }
+
+    if (!fs.existsSync(mediaFile)) {
+      return res.status(404).send("Not found")
+    }
+
+    try {
+      await fs.promises.mkdir(path.dirname(cacheFile), { recursive: true })
+      await sharp(mediaFile).resize(400, 400, { fit: "cover" }).jpeg({ quality: 80 }).toFile(cacheFile)
+      res.setHeader("Content-Type", "image/jpeg")
+      res.sendFile(cacheFile)
+    } catch (err) {
+      console.error("Thumbnail generation failed:", err)
+      res.status(500).send("Thumbnail generation failed")
+    }
+  })
 
   app.use(
     "/graphql",

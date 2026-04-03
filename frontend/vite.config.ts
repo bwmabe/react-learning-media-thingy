@@ -9,6 +9,7 @@ export default defineConfig({
     proxy: {
       "/graphql": "http://127.0.0.1:4000",
       "/static": "http://127.0.0.1:4000",
+      "/thumb": "http://127.0.0.1:4000",
     },
   },
 })
