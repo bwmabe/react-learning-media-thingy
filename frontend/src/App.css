@@ -421,6 +421,7 @@ body {
   width: 300vw;
   height: 100%;
   transform: translateX(-100vw);
+  will-change: transform;
 }
 
 .fs-slide {
@@ -430,6 +431,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  isolation: isolate;
 }
 
 .fs-image,

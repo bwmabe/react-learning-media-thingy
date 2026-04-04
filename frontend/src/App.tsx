@@ -64,19 +64,6 @@ const videoMimeType = (filename: string) =>
 const fileTitle = (file: File) => file.title || file.filename.split("/").pop() || file.filename
 
 
-const FsSlideImage: React.FC<{
-  src: string
-  className: string
-  alt: string
-  onClick?: (e: React.MouseEvent<HTMLImageElement>) => void
-}> = ({ src, className, alt, onClick }) => {
-  const ref = useRef<HTMLImageElement>(null)
-  useEffect(() => {
-    const img = ref.current   // captured at mount — valid DOM element
-    return () => { if (img) img.src = "" }  // img still valid after ref.current → null
-  }, [])
-  return <img ref={ref} src={src} className={className} alt={alt} onClick={onClick} />
-}
 
 export const App: React.FC = () => (
   <Routes>
@@ -145,11 +132,12 @@ const AppContent: React.FC = () => {
   }, [])
 
   // Reset carousel track to centre position before each paint so there's no flash
+  // Also fires when fullscreen opens to ensure correct initial position
   useLayoutEffect(() => {
     if (!fsTrackRef.current) return
     fsTrackRef.current.style.transition = "none"
     fsTrackRef.current.style.transform = "translateX(-100vw)"
-  }, [selectedFile])
+  }, [fullscreen, selectedFile])
 
   // Derive sort from ?sort=by-dir query param; default is alpha-asc
   const sortParam = searchParams.get("sort") ?? "alpha-asc"
@@ -375,7 +363,7 @@ const AppContent: React.FC = () => {
     }
     if (isImage(file.filename)) {
       return (
-        <FsSlideImage
+        <img
           src={getMediaUrl(file.filename)}
           className={isCurrent ? "fs-image" : "fs-adjacent-image"}
           alt={file.title}
