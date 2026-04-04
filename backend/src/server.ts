@@ -94,6 +94,7 @@ export async function createServer(dbPath?: string): Promise<{
   app.get("/thumb/*", (req, res) => {
     const relPath = req.path.slice("/thumb/".length)
     const cacheFile = path.resolve(thumbPath, relPath.replace(/\.[^.]+$/, ".jpg"))
+    console.log(`[thumb] relPath=${relPath} cacheFile=${cacheFile} exists=${fs.existsSync(cacheFile)}`)
 
     // Guard against path traversal
     if (!cacheFile.startsWith(thumbPath + path.sep) && cacheFile !== thumbPath) {
