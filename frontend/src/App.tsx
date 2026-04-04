@@ -364,6 +364,7 @@ const AppContent: React.FC = () => {
     if (isImage(file.filename)) {
       return (
         <img
+          key={isCurrent ? file.id : undefined}
           src={getMediaUrl(file.filename)}
           className={isCurrent ? "fs-image" : "fs-adjacent-image"}
           alt={file.title}
