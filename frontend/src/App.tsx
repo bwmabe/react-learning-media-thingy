@@ -374,7 +374,6 @@ const AppContent: React.FC = () => {
     if (isImage(file.filename)) {
       return (
         <FsSlideImage
-          key={file.id}
           src={getMediaUrl(file.filename)}
           className={isCurrent ? "fs-image" : "fs-adjacent-image"}
           alt={file.title}
