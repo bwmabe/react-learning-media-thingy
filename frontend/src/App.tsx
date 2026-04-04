@@ -63,6 +63,19 @@ const videoMimeType = (filename: string) =>
 
 const fileTitle = (file: File) => file.title || file.filename.split("/").pop() || file.filename
 
+const FsSlideImage: React.FC<{
+  src: string
+  className: string
+  alt: string
+  onClick?: (e: React.MouseEvent<HTMLImageElement>) => void
+}> = ({ src, className, alt, onClick }) => {
+  const ref = useRef<HTMLImageElement>(null)
+  useLayoutEffect(() => () => {
+    if (ref.current) ref.current.src = ""
+  }, [])
+  return <img ref={ref} src={src} className={className} alt={alt} decoding="async" onClick={onClick} />
+}
+
 export const App: React.FC = () => (
   <Routes>
     <Route path="/" element={<AppContent />} />
@@ -360,11 +373,11 @@ const AppContent: React.FC = () => {
     }
     if (isImage(file.filename)) {
       return (
-        <img
-          className={isCurrent ? "fs-image" : "fs-adjacent-image"}
+        <FsSlideImage
+          key={file.id}
           src={getMediaUrl(file.filename)}
+          className={isCurrent ? "fs-image" : "fs-adjacent-image"}
           alt={file.title}
-          decoding="async"
           onClick={isCurrent ? (e => { e.stopPropagation(); setFsUiVisible(v => !v) }) : undefined}
         />
       )
