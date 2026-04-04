@@ -1,9 +1,9 @@
 import { gql } from "@apollo/client"
-import { useMutation, useQuery } from "@apollo/client/react"
+import { useQuery } from "@apollo/client/react"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom"
 
-import { File, GetFilesResult, GetThumbsResult, GetUsersResult } from "./Interfaces"
+import { File, GetFilesResult, GetUsersResult } from "./Interfaces"
 import "./App.css"
 
 const GET_USERS = gql`
@@ -24,21 +24,9 @@ const GET_FILES = gql`
   }
 `
 
-const GET_THUMBS = gql`
-  query GetThumbs {
-    thumbs {
-      user
-      filename
-    }
-  }
-`
-
-const SET_THUMB = gql`
-  mutation SetThumb($user: String!, $filename: String!) {
-    setThumb(user: $user, filename: $filename) {
-      user
-      filename
-    }
+const GET_USER_PREVIEW = gql`
+  query GetUserPreview($user: String!) {
+    userPreview(user: $user)
   }
 `
 
@@ -84,6 +72,34 @@ export const App: React.FC = () => (
   </Routes>
 )
 
+const UserCard: React.FC<{ user: string; onClick: () => void }> = ({ user, onClick }) => {
+  const { data, loading } = useQuery<{ userPreview: string | null }>(GET_USER_PREVIEW, {
+    variables: { user },
+  })
+  const [imgLoaded, setImgLoaded] = useState(false)
+  const preview = data?.userPreview
+  const showSpinner = loading || (!!preview && !imgLoaded)
+
+  return (
+    <div className="user-card" onClick={onClick}>
+      {showSpinner && (
+        <div className="user-card-loading">
+          <div className="throbber throbber--sm" />
+        </div>
+      )}
+      {preview && (
+        <img
+          className={`user-card-img${imgLoaded ? "" : " user-card-img--hidden"}`}
+          src={getThumbUrl(preview)}
+          alt={user}
+          onLoad={() => setImgLoaded(true)}
+        />
+      )}
+      <div className="user-card-name">{user}</div>
+    </div>
+  )
+}
+
 const AppContent: React.FC = () => {
   const { user: selectedUser, gallery: galleryParam, fileId: fileIdParam } = useParams<{
     user?: string; gallery?: string; fileId?: string
@@ -95,11 +111,6 @@ const AppContent: React.FC = () => {
     variables: { user: selectedUser },
     skip: !selectedUser,
   })
-  const { data: thumbsData } = useQuery<GetThumbsResult>(GET_THUMBS)
-  const [setThumb] = useMutation(SET_THUMB, {
-    refetchQueries: [{ query: GET_THUMBS }],
-  })
-  const thumbsDispatched = useRef<Set<string>>(new Set())
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [expandedGalleries, setExpandedGalleries] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -169,31 +180,7 @@ const AppContent: React.FC = () => {
     setSelectedFile(data.files.find(f => f.id === decodeURIComponent(fileIdParam)) ?? null)
   }, [fileIdParam, data])
 
-  const thumbsMap = useMemo(() =>
-    new Map((thumbsData?.thumbs ?? []).map(t => [t.user, t.filename]))
-  , [thumbsData])
-
-  const userCards = useMemo(() =>
-    (usersData?.users ?? []).map(user => ({
-      user,
-      preview: thumbsMap.get(user) ?? null,
-    }))
-  , [usersData, thumbsMap])
-
-  // Store a thumbnail for any user that doesn't have one yet
-  useEffect(() => {
-    if (!data || !thumbsData) return
-    for (const { user } of userCards) {
-      if (!thumbsMap.has(user) && !thumbsDispatched.current.has(user)) {
-        const images = data.files.filter(f => f.user === user && isImage(f.filename))
-        if (images.length > 0) {
-          const pick = images[Math.floor(Math.random() * images.length)]
-          thumbsDispatched.current.add(user)
-          setThumb({ variables: { user, filename: pick.filename } })
-        }
-      }
-    }
-  }, [data, thumbsData, thumbsMap, userCards, setThumb])
+  const users = useMemo(() => usersData?.users ?? [], [usersData])
 
   const userFiles = useMemo(() =>
     (data?.files ?? []).filter(f => f.user === selectedUser)
@@ -404,13 +391,8 @@ const AppContent: React.FC = () => {
       {!selectedUser ? (
         <div className="landing">
           <div className="user-grid">
-            {userCards.map(({ user, preview }) => (
-              <div key={user} className="user-card" onClick={() => selectUser(user)}>
-                {preview && (
-                  <img className="user-card-img" src={getThumbUrl(preview)} alt={user} />
-                )}
-                <div className="user-card-name">{user}</div>
-              </div>
+            {users.map(user => (
+              <UserCard key={user} user={user} onClick={() => selectUser(user)} />
             ))}
           </div>
         </div>

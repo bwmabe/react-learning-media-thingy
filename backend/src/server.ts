@@ -50,6 +50,17 @@ export async function createServer(dbPath?: string): Promise<{
       users: () =>
         dbAll<{ user: string }>("SELECT DISTINCT user FROM items ORDER BY user")
           .then(rows => rows.map(r => r.user)),
+      userPreview: async (_parent: unknown, { user }: { user: string }) => {
+        const rows = await dbAll<{ filename: string }>(
+          `SELECT filename FROM items WHERE user = ? AND (
+            filename LIKE '%.jpg' OR filename LIKE '%.jpeg' OR
+            filename LIKE '%.png' OR filename LIKE '%.webp' OR
+            filename LIKE '%.heic' OR filename LIKE '%.avif'
+          ) LIMIT 1`,
+          [user]
+        )
+        return rows[0]?.filename ?? null
+      },
       files: (_parent: unknown, { filter, user }: { filter?: string; user?: string }) => {
         const conditions: string[] = []
         const params: string[] = []

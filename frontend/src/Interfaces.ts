@@ -13,12 +13,3 @@ export interface GetFilesResult {
 export interface GetUsersResult {
   users: string[]
 }
-
-export interface Thumb {
-  user: string
-  filename: string
-}
-
-export interface GetThumbsResult {
-  thumbs: Thumb[]
-}
