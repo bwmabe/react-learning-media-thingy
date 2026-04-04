@@ -70,7 +70,7 @@ const FsSlideImage: React.FC<{
   onClick?: (e: React.MouseEvent<HTMLImageElement>) => void
 }> = ({ src, className, alt, onClick }) => {
   const ref = useRef<HTMLImageElement>(null)
-  useLayoutEffect(() => () => {
+  useEffect(() => () => {
     if (ref.current) ref.current.src = ""
   }, [])
   return <img ref={ref} src={src} className={className} alt={alt} decoding="async" onClick={onClick} />
