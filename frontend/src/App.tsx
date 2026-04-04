@@ -77,8 +77,9 @@ const UserCard: React.FC<{ user: string; onClick: () => void }> = ({ user, onCli
     variables: { user },
   })
   const [imgLoaded, setImgLoaded] = useState(false)
+  const [imgError, setImgError] = useState(false)
   const preview = data?.userPreview
-  const showSpinner = loading || (!!preview && !imgLoaded)
+  const showSpinner = loading || (!!preview && !imgLoaded && !imgError)
 
   return (
     <div className="user-card" onClick={onClick}>
@@ -87,12 +88,13 @@ const UserCard: React.FC<{ user: string; onClick: () => void }> = ({ user, onCli
           <div className="throbber throbber--sm" />
         </div>
       )}
-      {preview && (
+      {preview && !imgError && (
         <img
           className={`user-card-img${imgLoaded ? "" : " user-card-img--hidden"}`}
           src={getThumbUrl(preview)}
           alt={user}
           onLoad={() => setImgLoaded(true)}
+          onError={() => setImgError(true)}
         />
       )}
       <div className="user-card-name">{user}</div>

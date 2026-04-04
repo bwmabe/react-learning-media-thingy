@@ -180,6 +180,9 @@ async function main() {
 
         if ("skip" in result) {
           skipped++
+          await generateThumb(result.filename).catch(err =>
+            console.warn(`  Thumbnail failed for ${result.filename}: ${(err as Error).message}`)
+          )
           continue
         }
 
