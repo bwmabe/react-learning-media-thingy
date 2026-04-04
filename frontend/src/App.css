@@ -465,10 +465,19 @@ body {
   color: var(--ctp-subtext0);
 }
 
-.fs-btn {
+.fs-btn-group {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fs-btn-group--left { left: 24px; }
+.fs-btn-group--right { right: 24px; }
+
+.fs-btn {
   background: var(--ctp-surface0);
   border: none;
   color: var(--ctp-text);
@@ -481,17 +490,19 @@ body {
   transition: opacity 0.15s, background 0.15s;
 }
 
-.fs-btn:hover {
+.fs-btn:hover:not(:disabled) {
   opacity: 1;
   background: var(--ctp-surface1);
+}
+
+.fs-btn:disabled {
+  opacity: 0.2;
+  cursor: default;
 }
 
 .fs-btn.gallery-jump {
   color: var(--ctp-peach);
 }
-
-.fs-prev { left: 24px; }
-.fs-next { right: 24px; }
 
 .fs-info {
   position: absolute;

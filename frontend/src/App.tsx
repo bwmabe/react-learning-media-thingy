@@ -323,7 +323,7 @@ const AppContent: React.FC = () => {
     const delta = e.changedTouches[0].clientX - fsDragStartX.current
     fsDragStartX.current = null
     const track = fsTrackRef.current
-    const threshold = window.innerWidth / 3
+    const threshold = window.innerWidth / 8
 
     const release = () => { track.style.willChange = "" }
 
@@ -362,7 +362,7 @@ const AppContent: React.FC = () => {
       return (
         <img
           className={isCurrent ? "fs-image" : "fs-adjacent-image"}
-          src={isCurrent ? getMediaUrl(file.filename) : getThumbUrl(file.filename)}
+          src={getMediaUrl(file.filename)}
           alt={file.title}
           decoding="async"
           onClick={isCurrent ? (e => { e.stopPropagation(); setFsUiVisible(v => !v) }) : undefined}
@@ -530,26 +530,43 @@ const AppContent: React.FC = () => {
           <button className="fs-close" onClick={e => { e.stopPropagation(); setFullscreen(false) }}>×</button>
           {(fsUiVisible || isVideo(selectedFile.filename)) && (
             <>
-              {prevNav && (
+              <div className="fs-btn-group fs-btn-group--left">
                 <button
-                  className={`fs-btn fs-prev${prevIsGalleryJump ? " gallery-jump" : ""}`}
-                  onClick={e => { e.stopPropagation(); navigateToEntry(prevNav) }}
-                >
-                  {prevIsGalleryJump ? "«" : "‹"}
-                </button>
-              )}
-              {nextNav && (
-                <button
-                  className={`fs-btn fs-next${nextIsGalleryJump ? " gallery-jump" : ""}`}
-                  onClick={e => { e.stopPropagation(); navigateToEntry(nextNav) }}
+                  className={`fs-btn${nextIsGalleryJump ? " gallery-jump" : ""}`}
+                  disabled={!nextNav}
+                  onClick={e => { e.stopPropagation(); nextNav && navigateToEntry(nextNav) }}
                 >
                   {nextIsGalleryJump ? "»" : "›"}
                 </button>
-              )}
+                <button
+                  className={`fs-btn${prevIsGalleryJump ? " gallery-jump" : ""}`}
+                  disabled={!prevNav}
+                  onClick={e => { e.stopPropagation(); prevNav && navigateToEntry(prevNav) }}
+                >
+                  {prevIsGalleryJump ? "«" : "‹"}
+                </button>
+              </div>
+              <div className="fs-btn-group fs-btn-group--right">
+                <button
+                  className={`fs-btn${prevIsGalleryJump ? " gallery-jump" : ""}`}
+                  disabled={!prevNav}
+                  onClick={e => { e.stopPropagation(); prevNav && navigateToEntry(prevNav) }}
+                >
+                  {prevIsGalleryJump ? "«" : "‹"}
+                </button>
+                <button
+                  className={`fs-btn${nextIsGalleryJump ? " gallery-jump" : ""}`}
+                  disabled={!nextNav}
+                  onClick={e => { e.stopPropagation(); nextNav && navigateToEntry(nextNav) }}
+                >
+                  {nextIsGalleryJump ? "»" : "›"}
+                </button>
+              </div>
               <div className="fs-info" onClick={e => e.stopPropagation()}>
                 <div className="fs-info-gallery">{fileTitle(selectedFile)}</div>
                 <div className="fs-info-file">{selectedFile.filename.split("/").pop()}</div>
                 <div className="fs-info-user">{selectedFile.user}</div>
+                <div className="fs-info-user">{selectedFile.published}</div>
               </div>
             </>
           )}
