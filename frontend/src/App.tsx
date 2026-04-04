@@ -63,6 +63,7 @@ const videoMimeType = (filename: string) =>
 
 const fileTitle = (file: File) => file.title || file.filename.split("/").pop() || file.filename
 
+
 const FsSlideImage: React.FC<{
   src: string
   className: string
@@ -70,10 +71,11 @@ const FsSlideImage: React.FC<{
   onClick?: (e: React.MouseEvent<HTMLImageElement>) => void
 }> = ({ src, className, alt, onClick }) => {
   const ref = useRef<HTMLImageElement>(null)
-  useEffect(() => () => {
-    if (ref.current) ref.current.src = ""
+  useEffect(() => {
+    const img = ref.current   // captured at mount — valid DOM element
+    return () => { if (img) img.src = "" }  // img still valid after ref.current → null
   }, [])
-  return <img ref={ref} src={src} className={className} alt={alt} decoding="async" onClick={onClick} />
+  return <img ref={ref} src={src} className={className} alt={alt} onClick={onClick} />
 }
 
 export const App: React.FC = () => (
