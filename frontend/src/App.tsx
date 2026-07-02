@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client"
 import { useQuery } from "@apollo/client/react"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { Route, Routes, useNavigate, useParams, useSearchParams } from "react-router"
 
 import { File, GetFilesResult, GetUsersResult } from "./Interfaces"
 import "./App.css"
